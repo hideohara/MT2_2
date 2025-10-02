@@ -1,6 +1,8 @@
 #include <Novice.h>
+#include <Math.h>
 
 const char kWindowTitle[] = "GC1C_99_オオハラ_ヒデフミ";
+
 
 // 2x2の行列を表す
 struct Matrix2x2
@@ -84,6 +86,42 @@ Vector2 Multiply(Vector2 vector, Matrix2x2 matrix)
 	return result;
 }
 
+// 回転行列の作成関数
+Matrix2x2 MakeRotateMatrix(float theta)
+{
+	Matrix2x2 result = {};
+
+	result.m[0][0] = cosf(theta);
+	result.m[0][1] = sinf(theta);
+	result.m[1][0] = -sinf(theta);
+	result.m[1][1] = cosf(theta);
+
+	return result;
+}
+
+// スケール（拡縮）行列の作成関数
+Matrix2x2 MakeScaleMatrix(Vector2 scale) {
+	Matrix2x2 result;
+
+	result.m[0][0] = scale.x;
+	result.m[0][1] = 0;
+	result.m[1][0] = 0;
+	result.m[1][1] = scale.y;
+
+	return result;
+}
+
+// スクリーン座標系へ変換する関数 (前期に作成済)
+Vector2 ToScreen(const Vector2* world) {
+	// 今回のワールド座標系からスクリーン座標系は
+	// 原点位置がyに500ずれていて、y軸が反転
+	const Vector2 kWorldToScreenTranslate = { 0.0f, 500.f };
+	const Vector2 kWorldToScreenScale = { 1.0f, -1.0f };
+	return {
+	  (world->x * kWorldToScreenScale.x) + kWorldToScreenTranslate.x,
+	  (world->y * kWorldToScreenScale.y) + kWorldToScreenTranslate.y };
+}
+
 
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
@@ -107,6 +145,19 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	m2.m[1][1] = 8.0f;
 	Vector2 v = { 10, 20 };
 
+	// 中心の座標
+	Vector2 rectCenter = { 400, 100 };
+
+	// サイズ
+	Vector2 rectSize = { 200, 100 };
+
+
+	// 角度の変数
+	float theta = 0.0f;
+
+	// テクスチャーの読み込み
+	int textureHandle = Novice::LoadTexture("white1x1.png");
+
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
 		// フレームの開始
@@ -120,14 +171,44 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		/// ↓更新処理ここから
 		///
 
-		// 行列の足算
 		Matrix2x2 resultAdd = Add(m1, m2);
-		// 行列の引き算
 		Matrix2x2 resultSubtract = Subtract(m1, m2);
-		// 行列の掛算
 		Matrix2x2 resultMultiply = Multiply(m1, m2);
-		// ベクトル×行列
 		Vector2 resultVector = Multiply(v, m1);
+
+		// 矩形(四角形)の4頂点の作成
+		Vector2 leftTop = { -rectSize.x / 2, rectSize.y / 2 };     // 左上
+		Vector2 rightTop = { rectSize.x / 2, rectSize.y / 2 };     	// 右上
+		Vector2 leftBottom = { -rectSize.x / 2, -rectSize.y / 2 }; 	// 左下
+		Vector2 rightBottom = { rectSize.x / 2, -rectSize.y / 2 }; 	// 右下
+
+		// 角度を増やす
+		theta += 0.1f;
+
+		// 回転行列の作成
+		Matrix2x2 rotateMatrix = MakeRotateMatrix(theta);
+
+		// 矩形(四角形)の回転
+		leftTop = Multiply(leftTop, rotateMatrix);
+		rightTop = Multiply(rightTop, rotateMatrix);
+		leftBottom = Multiply(leftBottom, rotateMatrix);
+		rightBottom = Multiply(rightBottom, rotateMatrix);
+
+		// 矩形(四角形)の平行移動
+		leftTop.x += rectCenter.x;
+		leftTop.y += rectCenter.y;
+		rightTop.x += rectCenter.x;
+		rightTop.y += rectCenter.y;
+		leftBottom.x += rectCenter.x;
+		leftBottom.y += rectCenter.y;
+		rightBottom.x += rectCenter.x;
+		rightBottom.y += rectCenter.y;
+
+		// 矩形(四角形)をスクリーン座標へ変換
+		leftTop = ToScreen(&leftTop);
+		rightTop = ToScreen(&rightTop);
+		leftBottom = ToScreen(&leftBottom);
+		rightBottom = ToScreen(&rightBottom);
 
 		///
 		/// ↑更新処理ここまで
@@ -137,10 +218,24 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		/// ↓描画処理ここから
 		///
 
-		MatrixScreenPrintf(0, kRowHeight * 0, resultAdd);
-		MatrixScreenPrintf(0, kRowHeight * 2 + 10, resultSubtract);
-		MatrixScreenPrintf(0, kRowHeight * 4 + 20, resultMultiply);
-		VectorScreenPrintf(0, kRowHeight * 6 + 30, resultVector);
+		//MatrixScreenPrintf(0, kRowHeight * 0, resultAdd);
+		//MatrixScreenPrintf(0, kRowHeight * 2 + 10, resultSubtract);
+		//MatrixScreenPrintf(0, kRowHeight * 4 + 20, resultMultiply);
+		//VectorScreenPrintf(0, kRowHeight * 6 + 30, resultVector);
+
+		// 矩形(四角形)を描画
+		Novice::DrawQuad(
+			int(leftTop.x), int(leftTop.y),
+			int(rightTop.x), int(rightTop.y),
+			int(leftBottom.x), int(leftBottom.y),
+			int(rightBottom.x), int(rightBottom.y),
+			0, 0, 1, 1, textureHandle, WHITE);
+
+		// 矩形(四角形)を描画
+		Vector2 scale{ 2.0f, 4.0f };
+		Matrix2x2 scaleMatrix = MakeScaleMatrix(scale);
+		MatrixScreenPrintf(0, 0, scaleMatrix);
+
 
 		///
 		/// ↑描画処理ここまで
