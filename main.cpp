@@ -1,5 +1,6 @@
 #include <Novice.h>
 #include <Math.h>
+#include <assert.h>
 
 const char kWindowTitle[] = "GC1C_99_オオハラ_ヒデフミ";
 
@@ -14,6 +15,11 @@ struct Vector2
 {
 	float x;
 	float y;
+};
+
+// 3x3の行列を表す
+struct Matrix3x3 {
+	float m[3][3];
 };
 
 static const int kRowHeight = 20;
@@ -122,6 +128,32 @@ Vector2 ToScreen(const Vector2* world) {
 	  (world->y * kWorldToScreenScale.y) + kWorldToScreenTranslate.y };
 }
 
+Matrix3x3 MakeTranslateMatrix(Vector2 translate) {
+	Matrix3x3 result;
+	result.m[0][0] = 1.0f;
+	result.m[0][1] = 0.0f;
+	result.m[0][2] = 0.0f;
+	result.m[1][0] = 0.0f;
+	result.m[1][1] = 1.0f;
+	result.m[1][2] = 0.0f;
+	result.m[2][0] = translate.x;
+	result.m[2][1] = translate.y;
+	result.m[2][2] = 1.0f;
+	return result;
+}
+
+Vector2 Transform(Vector2 vector, Matrix3x3 matrix) {
+	Vector2 result;
+	result.x = vector.x * matrix.m[0][0] + vector.y * matrix.m[1][0] + 1.0f * matrix.m[2][0];
+	result.y = vector.x * matrix.m[0][1] + vector.y * matrix.m[1][1] + 1.0f * matrix.m[2][1];
+	float w = vector.x * matrix.m[0][2] + vector.y * matrix.m[1][2] + 1.0f * matrix.m[2][2];
+	assert(w != 0.0f);
+	result.x /= w;
+	result.y /= w;
+	return result;
+}
+
+
 
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
@@ -158,6 +190,9 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	// テクスチャーの読み込み
 	int textureHandle = Novice::LoadTexture("white1x1.png");
 
+	// キー入力で移動する速さ
+	const int kSpeed = 4;
+
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
 		// フレームの開始
@@ -189,20 +224,44 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		Matrix2x2 rotateMatrix = MakeRotateMatrix(theta);
 
 		// 矩形(四角形)の回転
-		leftTop = Multiply(leftTop, rotateMatrix);
-		rightTop = Multiply(rightTop, rotateMatrix);
-		leftBottom = Multiply(leftBottom, rotateMatrix);
-		rightBottom = Multiply(rightBottom, rotateMatrix);
+		//leftTop = Multiply(leftTop, rotateMatrix);
+		//rightTop = Multiply(rightTop, rotateMatrix);
+		//leftBottom = Multiply(leftBottom, rotateMatrix);
+		//rightBottom = Multiply(rightBottom, rotateMatrix);
 
-		// 矩形(四角形)の平行移動
-		leftTop.x += rectCenter.x;
-		leftTop.y += rectCenter.y;
-		rightTop.x += rectCenter.x;
-		rightTop.y += rectCenter.y;
-		leftBottom.x += rectCenter.x;
-		leftBottom.y += rectCenter.y;
-		rightBottom.x += rectCenter.x;
-		rightBottom.y += rectCenter.y;
+		//// 矩形(四角形)の平行移動
+		//leftTop.x += rectCenter.x;
+		//leftTop.y += rectCenter.y;
+		//rightTop.x += rectCenter.x;
+		//rightTop.y += rectCenter.y;
+		//leftBottom.x += rectCenter.x;
+		//leftBottom.y += rectCenter.y;
+		//rightBottom.x += rectCenter.x;
+		//rightBottom.y += rectCenter.y;
+
+		// 上キーを押したら上に動かす
+		if (keys[DIK_UP] != 0) {
+			rectCenter.y += kSpeed;
+		}
+		// 下キーを押したら下に動かす
+		if (keys[DIK_DOWN] != 0) {
+			rectCenter.y -= kSpeed;
+		}
+		// 左キーを押したら左に動かす
+		if (keys[DIK_LEFT] != 0) {
+			rectCenter.x -= kSpeed;
+		}
+		// 右キーを押したら右に動かす
+		if (keys[DIK_RIGHT] != 0) {
+			rectCenter.x += kSpeed;
+		}
+
+		// 平行移動行列を作成して、4頂点すべてを移動
+		Matrix3x3 translateMatrix = MakeTranslateMatrix(rectCenter);
+		leftTop = Transform(leftTop, translateMatrix);
+		rightTop = Transform(rightTop, translateMatrix);
+		leftBottom = Transform(leftBottom, translateMatrix);
+		rightBottom = Transform(rightBottom, translateMatrix);
 
 		// 矩形(四角形)をスクリーン座標へ変換
 		leftTop = ToScreen(&leftTop);
