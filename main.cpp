@@ -81,6 +81,21 @@ Matrix2x2 Multiply(Matrix2x2 matrix1, Matrix2x2 matrix2)
 	return result;
 }
 
+// 3. 行列の積（3x3での積）
+Matrix3x3 Multiply(Matrix3x3 matrix1, Matrix3x3 matrix2)
+{
+	Matrix3x3 result = {};
+
+	for (int i = 0; i < 3; i++) {
+		for (int j = 0; j < 3; j++) {
+			for (int k = 0; k < 3; k++) {
+				result.m[i][j] += matrix1.m[i][k] * matrix2.m[k][j];
+			}
+		}
+	}
+	return result;
+}
+
 // 4. ベクトルと行列の積
 Vector2 Multiply(Vector2 vector, Matrix2x2 matrix)
 {
@@ -93,29 +108,45 @@ Vector2 Multiply(Vector2 vector, Matrix2x2 matrix)
 }
 
 // 回転行列の作成関数
-Matrix2x2 MakeRotateMatrix(float theta)
+Matrix3x3 MakeRotateMatrix(float theta)
 {
-	Matrix2x2 result = {};
-
+	Matrix3x3 result = {};
 	result.m[0][0] = cosf(theta);
 	result.m[0][1] = sinf(theta);
+	result.m[0][2] = 0.0f;
+
 	result.m[1][0] = -sinf(theta);
 	result.m[1][1] = cosf(theta);
+	result.m[1][2] = 0.0f;
+
+	result.m[2][0] = 0.0f;
+	result.m[2][1] = 0.0f;
+	result.m[2][2] = 1.0f;
 
 	return result;
 }
 
 // スケール（拡縮）行列の作成関数
-Matrix2x2 MakeScaleMatrix(Vector2 scale) {
-	Matrix2x2 result;
-
+Matrix3x3 MakeScaleMatrix(Vector2 scale)
+{
+	Matrix3x3 result = {};
 	result.m[0][0] = scale.x;
-	result.m[0][1] = 0;
-	result.m[1][0] = 0;
+	result.m[0][1] = 0.0f;
+	result.m[0][2] = 0.0f;
+
+	result.m[1][0] = 0.0f;
 	result.m[1][1] = scale.y;
+	result.m[1][2] = 0.0f;
+
+	result.m[2][0] = 0.0f;
+	result.m[2][1] = 0.0f;
+	result.m[2][2] = 1.0f;
 
 	return result;
 }
+
+
+
 
 // スクリーン座標系へ変換する関数 (前期に作成済)
 Vector2 ToScreen(const Vector2* world) {
@@ -153,22 +184,39 @@ Vector2 Transform(Vector2 vector, Matrix3x3 matrix) {
 	return result;
 }
 
+// ------------------------------------
 
-Matrix3x3 MakeAffineMatrix(Vector2 scale, float rotate, Vector2 translate) {
-	float cosine = cosf(rotate);
-	float sine = sinf(rotate);
-	Matrix3x3 result;
-	result.m[0][0] = scale.x * cosine;
-	result.m[0][1] = scale.x * sine;
-	result.m[0][2] = 0.0f;
-	result.m[1][0] = -scale.y * sine;
-	result.m[1][1] = scale.y * cosine;
-	result.m[1][2] = 0.0f;
-	result.m[2][0] = translate.x;
-	result.m[2][1] = translate.y;
-	result.m[2][2] = 1.0f;
+
+//Matrix3x3 MakeAffineMatrix(Vector2 scale, float rotate, Vector2 translate) {
+//	float cosine = cosf(rotate);
+//	float sine = sinf(rotate);
+//	Matrix3x3 result;
+//	result.m[0][0] = scale.x * cosine;
+//	result.m[0][1] = scale.x * sine;
+//	result.m[0][2] = 0.0f;
+//	result.m[1][0] = -scale.y * sine;
+//	result.m[1][1] = scale.y * cosine;
+//	result.m[1][2] = 0.0f;
+//	result.m[2][0] = translate.x;
+//	result.m[2][1] = translate.y;
+//	result.m[2][2] = 1.0f;
+//	return result;
+//}
+
+// アフィン変換
+Matrix3x3 MakeAffineMatrix(Vector2 scale, float rotate, Vector2 translate)
+{
+	Matrix3x3 result = {};
+	// 拡大縮小
+	Matrix3x3 scaleMatrix = MakeScaleMatrix(scale);
+	Matrix3x3 rotateMatrix = MakeRotateMatrix(rotate);
+	Matrix3x3 translateMatrix = MakeTranslateMatrix(translate);
+
+	result = Multiply(Multiply(scaleMatrix, rotateMatrix), translateMatrix);
+
 	return result;
 }
+
 
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
@@ -209,10 +257,12 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	const int kSpeed = 4;
 
 	// スケール
-	const float kMaxScale = 2.0f;
-	const float kMinScale = 0.5f;
-	float scale = 1.0f;
-	float scaleIncrement = 0.04f;
+	Vector2 scale{ 1.0f, 1.0f };
+
+	//const float kMaxScale = 2.0f;
+	//const float kMinScale = 0.5f;
+	//float scale = 1.0f;
+	//float scaleIncrement = 0.04f;
 
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
@@ -239,16 +289,16 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		Vector2 rightBottom = { rectSize.x / 2, -rectSize.y / 2 }; 	// 右下
 
 		// スケール
-		scale += scaleIncrement;
-		if (scale <= kMinScale || kMaxScale <= scale) {
-			scaleIncrement *= -1.0f;
-		}
+		//scale += scaleIncrement;
+		//if (scale <= kMinScale || kMaxScale <= scale) {
+		//	scaleIncrement *= -1.0f;
+		//}
 
 		// 角度を増やす
 		theta += 0.1f;
 
 		// 回転行列の作成
-		Matrix2x2 rotateMatrix = MakeRotateMatrix(theta);
+		//Matrix2x2 rotateMatrix = MakeRotateMatrix(theta);
 
 		// 矩形(四角形)の回転
 		//leftTop = Multiply(leftTop, rotateMatrix);
@@ -283,6 +333,22 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			rectCenter.x += kSpeed;
 		}
 
+		// スケール
+		if (keys[DIK_Z] != 0) {
+			if (scale.x >= 0.1f)
+			{
+				scale.x -= 0.01f;
+			}
+			if (scale.y >= 0.1f)
+			{
+				scale.y -= 0.01f;
+			}
+		}
+		if (keys[DIK_X] != 0) {
+			scale.x += 0.01f;
+			scale.y += 0.01f;
+		}
+
 		// 平行移動行列を作成して、4頂点すべてを移動
 		//Matrix3x3 translateMatrix = MakeTranslateMatrix(rectCenter);
 		//leftTop = Transform(leftTop, translateMatrix);
@@ -291,7 +357,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		//rightBottom = Transform(rightBottom, translateMatrix);
 
 		// 4頂点すべてをアフィン変換
-		Matrix3x3 worldMatrix = MakeAffineMatrix(Vector2{ scale, scale, }, theta, rectCenter);
+		Matrix3x3 worldMatrix = MakeAffineMatrix(scale, theta, rectCenter);
 		leftTop = Transform(leftTop, worldMatrix);
 		rightTop = Transform(rightTop, worldMatrix);
 		leftBottom = Transform(leftBottom, worldMatrix);
@@ -325,7 +391,6 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			0, 0, 1, 1, textureHandle, WHITE);
 
 		// 矩形(四角形)を描画
-		//Vector2 scale{ 2.0f, 4.0f };
 		//Matrix2x2 scaleMatrix = MakeScaleMatrix(scale);
 		//MatrixScreenPrintf(0, 0, scaleMatrix);
 
