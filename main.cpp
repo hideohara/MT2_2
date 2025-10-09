@@ -276,6 +276,37 @@ Matrix3x3 Inverse(Matrix3x3 matrix)
 	return result;
 }
 
+// 2x2転置行列を求める
+Matrix2x2 Transpose(Matrix2x2 matrix)
+{
+	Matrix2x2 m1{};
+
+	m1.m[0][0] = matrix.m[0][0];
+	m1.m[0][1] = matrix.m[1][0];
+	m1.m[1][0] = matrix.m[0][1];
+	m1.m[1][1] = matrix.m[1][1];
+
+	return m1;
+}
+
+// 3x3転置行列を求める
+Matrix3x3 Transpose(Matrix3x3 matrix)
+{
+	Matrix3x3 m2{};
+
+	m2.m[0][0] = matrix.m[0][0];
+	m2.m[0][1] = matrix.m[1][0];
+	m2.m[0][2] = matrix.m[2][0];
+	m2.m[1][0] = matrix.m[0][1];
+	m2.m[1][2] = matrix.m[2][1];
+	m2.m[1][1] = matrix.m[1][1];
+	m2.m[2][0] = matrix.m[0][2];
+	m2.m[2][1] = matrix.m[1][2];
+	m2.m[2][2] = matrix.m[2][2];
+
+	return m2;
+}
+
 // --------------------------------------------------
 
 // Windowsアプリでのエントリーポイント(main関数)
@@ -438,8 +469,14 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		rightBottom = ToScreen(&rightBottom);
 
 		// 逆行列
-		Matrix2x2 inverseM1 = Inverse(m1);
-		Matrix3x3 inverseM2 = Inverse(m2);
+		//Matrix2x2 inverseM1 = Inverse(m1);
+		//Matrix3x3 inverseM2 = Inverse(m2);
+
+		// 転置行列
+		Matrix2x2 transposeM1 = Transpose(m1);
+		Matrix3x3 transposeM2 = Transpose(m2);
+
+
 
 		///
 		/// ↑更新処理ここまで
@@ -467,8 +504,12 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		//MatrixScreenPrintf(0, 0, scaleMatrix);
 
 		// 逆行列
-		MatrixScreenPrintf(0, kRowHeight * 0, inverseM1);
-		MatrixScreenPrintf(0, kRowHeight * 2 + 10, inverseM2);
+		//MatrixScreenPrintf(0, kRowHeight * 0, inverseM1);
+		//MatrixScreenPrintf(0, kRowHeight * 2 + 10, inverseM2);
+
+		// 転置行列
+		MatrixScreenPrintf(0, kRowHeight * 0, transposeM1);
+		MatrixScreenPrintf(0, kRowHeight * 2 + 10, transposeM2);
 
 		///
 		/// ↑描画処理ここまで
