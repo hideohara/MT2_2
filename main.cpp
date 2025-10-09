@@ -207,12 +207,13 @@ Vector2 Transform(Vector2 vector, Matrix3x3 matrix) {
 Matrix3x3 MakeAffineMatrix(Vector2 scale, float rotate, Vector2 translate)
 {
 	Matrix3x3 result = {};
-	// 拡大縮小
+	
 	Matrix3x3 scaleMatrix = MakeScaleMatrix(scale);
 	Matrix3x3 rotateMatrix = MakeRotateMatrix(rotate);
 	Matrix3x3 translateMatrix = MakeTranslateMatrix(translate);
 
-	result = Multiply(Multiply(scaleMatrix, rotateMatrix), translateMatrix);
+	//result = Multiply(Multiply(scaleMatrix, rotateMatrix), translateMatrix);
+	result = Multiply(Multiply(scaleMatrix, translateMatrix), rotateMatrix);
 
 	return result;
 }
@@ -295,7 +296,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		//}
 
 		// 角度を増やす
-		theta += 0.1f;
+		theta += 0.05f;
 
 		// 回転行列の作成
 		//Matrix2x2 rotateMatrix = MakeRotateMatrix(theta);
