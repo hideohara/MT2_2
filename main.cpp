@@ -35,6 +35,21 @@ void MatrixScreenPrintf(int x, int y, Matrix2x2 matrix) {
 	}
 }
 
+// 行列の表示 3x3
+void MatrixScreenPrintf(int x, int y, Matrix3x3 matrix) {
+	for (int row = 0; row < 3; ++row) {
+		for (int column = 0; column < 3; ++column) {
+			Novice::ScreenPrintf(
+				x + column * kColumnWidth, y + row * kRowHeight, "%.02f", matrix.m[row][column]);
+		}
+	}
+}
+
+
+
+
+
+
 // ベクトルの表示
 void VectorScreenPrintf(int x, int y, Vector2 vector) {
 	Novice::ScreenPrintf(x, y, "%.02f", vector.x);
@@ -218,6 +233,51 @@ Matrix3x3 MakeAffineMatrix(Vector2 scale, float rotate, Vector2 translate)
 }
 
 
+// 2x2逆行列を求める
+Matrix2x2 Inverse(Matrix2x2 matrix)
+{
+	Matrix2x2 result = {};
+	float determinant = matrix.m[0][0] * matrix.m[1][1] - matrix.m[0][1] * matrix.m[1][0];
+
+	assert(determinant != 0);
+
+	float determinantRecp = 1.0f / determinant;
+
+	result.m[0][0] = matrix.m[1][1] * determinantRecp;
+	result.m[0][1] = -matrix.m[0][1] * determinantRecp;
+	result.m[1][0] = -matrix.m[1][0] * determinantRecp;
+	result.m[1][1] = matrix.m[0][0] * determinantRecp;
+
+	return result;
+}
+
+// 3x3逆行列を求める
+Matrix3x3 Inverse(Matrix3x3 matrix)
+{
+	Matrix3x3 result = {};
+	float determinant = matrix.m[0][0] * (matrix.m[1][1] * matrix.m[2][2] - matrix.m[1][2] * matrix.m[2][1]) - matrix.m[0][1] * (matrix.m[1][0] * matrix.m[2][2] - matrix.m[1][2] * matrix.m[2][0]) + matrix.m[0][2] * (matrix.m[1][0] * matrix.m[2][1] - matrix.m[1][1] * matrix.m[2][0]);
+
+	assert(determinant != 0);
+
+	float determinantRecp = 1.0f / determinant;
+
+	result.m[0][0] = (matrix.m[1][1] * matrix.m[2][2] - matrix.m[1][2] * matrix.m[2][1]) * determinantRecp;
+	result.m[0][1] = -(matrix.m[0][1] * matrix.m[2][2] - matrix.m[0][2] * matrix.m[2][1]) * determinantRecp;
+	result.m[0][2] = (matrix.m[0][1] * matrix.m[1][2] - matrix.m[0][2] * matrix.m[1][1]) * determinantRecp;
+
+	result.m[1][0] = -(matrix.m[1][0] * matrix.m[2][2] - matrix.m[1][2] * matrix.m[2][0]) * determinantRecp;
+	result.m[1][1] = (matrix.m[0][0] * matrix.m[2][2] - matrix.m[0][2] * matrix.m[2][0]) * determinantRecp;
+	result.m[1][2] = -(matrix.m[0][0] * matrix.m[1][2] - matrix.m[0][2] * matrix.m[1][0]) * determinantRecp;
+
+	result.m[2][0] = (matrix.m[1][0] * matrix.m[2][1] - matrix.m[1][1] * matrix.m[2][0]) * determinantRecp;
+	result.m[2][1] = -(matrix.m[0][0] * matrix.m[2][1] - matrix.m[0][1] * matrix.m[2][0]) * determinantRecp;
+	result.m[2][2] = (matrix.m[0][0] * matrix.m[1][1] - matrix.m[0][1] * matrix.m[1][0]) * determinantRecp;
+
+	return result;
+}
+
+// --------------------------------------------------
+
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
@@ -233,11 +293,19 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	m1.m[0][1] = 2.0f;
 	m1.m[1][0] = 3.0f;
 	m1.m[1][1] = 4.0f;
-	Matrix2x2 m2;
-	m2.m[0][0] = 5.0f;
-	m2.m[0][1] = 6.0f;
-	m2.m[1][0] = 7.0f;
-	m2.m[1][1] = 8.0f;
+
+	//Matrix2x2 m2;
+	//m2.m[0][0] = 5.0f;
+	//m2.m[0][1] = 6.0f;
+	//m2.m[1][0] = 7.0f;
+	//m2.m[1][1] = 8.0f;
+
+	Matrix3x3 m2;
+	m2.m[0][0] = 1.0f; m2.m[0][1] = 2.0f; m2.m[0][2] = 0.0f;
+	m2.m[1][0] = 3.0f; m2.m[1][1] = 4.0f; m2.m[1][2] = 0.0f;
+	m2.m[2][0] = 5.0f; m2.m[2][1] = 6.0f; m2.m[2][2] = 1.0f;
+
+
 	Vector2 v = { 10, 20 };
 
 	// 中心の座標
@@ -277,10 +345,10 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		/// ↓更新処理ここから
 		///
 
-		Matrix2x2 resultAdd = Add(m1, m2);
-		Matrix2x2 resultSubtract = Subtract(m1, m2);
-		Matrix2x2 resultMultiply = Multiply(m1, m2);
-		Vector2 resultVector = Multiply(v, m1);
+		//Matrix2x2 resultAdd = Add(m1, m2);
+		//Matrix2x2 resultSubtract = Subtract(m1, m2);
+		//Matrix2x2 resultMultiply = Multiply(m1, m2);
+		//Vector2 resultVector = Multiply(v, m1);
 
 		// 矩形(四角形)の4頂点の作成
 		Vector2 leftTop = { -rectSize.x / 2, rectSize.y / 2 };     // 左上
@@ -369,6 +437,10 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		leftBottom = ToScreen(&leftBottom);
 		rightBottom = ToScreen(&rightBottom);
 
+		// 逆行列
+		Matrix2x2 inverseM1 = Inverse(m1);
+		Matrix3x3 inverseM2 = Inverse(m2);
+
 		///
 		/// ↑更新処理ここまで
 		///
@@ -394,6 +466,9 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		//Matrix2x2 scaleMatrix = MakeScaleMatrix(scale);
 		//MatrixScreenPrintf(0, 0, scaleMatrix);
 
+		// 逆行列
+		MatrixScreenPrintf(0, kRowHeight * 0, inverseM1);
+		MatrixScreenPrintf(0, kRowHeight * 2 + 10, inverseM2);
 
 		///
 		/// ↑描画処理ここまで
