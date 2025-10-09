@@ -307,6 +307,42 @@ Matrix3x3 Transpose(Matrix3x3 matrix)
 	return m2;
 }
 
+//正射影行列
+//受け取った左上から右下までの範囲を-1～1までの範囲(正規化デバイス座標系)に変換する行列
+Matrix3x3 MakeOrthographicMatrix(float left, float top, float right, float bottom) {
+	Matrix3x3 result{};
+	result.m[0][0] = 2 / (right - left);
+	result.m[0][1] = 0;
+	result.m[0][2] = 0;
+	result.m[1][0] = 0;
+	result.m[1][1] = 2 / (top - bottom);
+	result.m[1][2] = 0;
+	result.m[2][0] = (left + right) / (left - right);
+	result.m[2][1] = (top + bottom) / (bottom - top);
+	result.m[2][2] = 1;
+	//資料p12を参考に中身を埋める
+	//分母、分子の中で計算がある場合は()で囲うの忘れずに
+	return result;
+}
+
+//ビューポート行列
+//左上の開始位置と幅、高さを使用してスクリーン座標系でのどの位置を左上としたどこまでの範囲に描画するかを決める
+Matrix3x3 MakeViewportMatrix(float left, float top, float width, float height) {
+
+	//資料p16を参考に中身を埋める
+	Matrix3x3 result{};
+	result.m[0][0] = width / 2;
+	result.m[0][1] = 0;
+	result.m[0][2] = 0;
+	result.m[1][0] = 0;
+	result.m[1][1] = -(height / 2);
+	result.m[1][2] = 0;
+	result.m[2][0] = left + (width / 2);
+	result.m[2][1] = top + (height / 2);
+	result.m[2][2] = 1;
+	return result;
+}
+
 // --------------------------------------------------
 
 // Windowsアプリでのエントリーポイント(main関数)
@@ -340,10 +376,10 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	Vector2 v = { 10, 20 };
 
 	// 中心の座標
-	Vector2 rectCenter = { 400, 100 };
+	Vector2 rectCenter = { 0, 0 };
 
 	// サイズ
-	Vector2 rectSize = { 200, 100 };
+	Vector2 rectSize = { 80, 80 };
 
 
 	// 角度の変数
@@ -357,6 +393,9 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 	// スケール
 	Vector2 scale{ 1.0f, 1.0f };
+
+	// カメラのワールド座標を入れる
+	Vector2 cameraPosition = { 200,200 };
 
 	//const float kMaxScale = 2.0f;
 	//const float kMinScale = 0.5f;
@@ -455,18 +494,49 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		//leftBottom = Transform(leftBottom, translateMatrix);
 		//rightBottom = Transform(rightBottom, translateMatrix);
 
-		// 4頂点すべてをアフィン変換
-		Matrix3x3 worldMatrix = MakeAffineMatrix(scale, theta, rectCenter);
-		leftTop = Transform(leftTop, worldMatrix);
-		rightTop = Transform(rightTop, worldMatrix);
-		leftBottom = Transform(leftBottom, worldMatrix);
-		rightBottom = Transform(rightBottom, worldMatrix);
+		//// 4頂点すべてをアフィン変換
+		//Matrix3x3 worldMatrix = MakeAffineMatrix(scale, theta, rectCenter);
+		//leftTop = Transform(leftTop, worldMatrix);
+		//rightTop = Transform(rightTop, worldMatrix);
+		//leftBottom = Transform(leftBottom, worldMatrix);
+		//rightBottom = Transform(rightBottom, worldMatrix);
 
-		// 矩形(四角形)をスクリーン座標へ変換
-		leftTop = ToScreen(&leftTop);
-		rightTop = ToScreen(&rightTop);
-		leftBottom = ToScreen(&leftBottom);
-		rightBottom = ToScreen(&rightBottom);
+		//// 矩形(四角形)をスクリーン座標へ変換
+		//leftTop = ToScreen(&leftTop);
+		//rightTop = ToScreen(&rightTop);
+		//leftBottom = ToScreen(&leftBottom);
+		//rightBottom = ToScreen(&rightBottom);
+
+
+		//1.矩形のworldMatrixを作製
+		//Matrix3x3 worldMatrix = MakeAffineMatrix(scale, theta, rectCenter);
+		Matrix3x3 worldMatrix = MakeTranslateMatrix(rectCenter);
+
+		//2bカメラのWorldMatrixを作成
+		//作成方法はworldMatrixとほぼ同じだが、positionだけ違うことに注意
+		Matrix3x3 cameraMatrix = MakeTranslateMatrix(cameraPosition);
+
+		//カメラのworldMatrixの逆行列(ビュー行列)を作成
+		Matrix3x3 viewMatrix = Inverse(cameraMatrix);
+
+		//3.確認課題資料p2の手順3の通りに引数を入れる
+		Matrix3x3 orthoMatrix = MakeOrthographicMatrix(-640, 360, 640, -360);
+
+		//4.確認課題資料p2の手順4の通りに引数を入れる
+		Matrix3x3 viewportMatrix = MakeViewportMatrix(0, 0, 1280, 720);
+
+
+		//5.ワールドからビューポート行列までの行列全てを合成する
+		Matrix3x3 wvpVpMatrix = Multiply(worldMatrix, viewMatrix);
+		wvpVpMatrix = Multiply(wvpVpMatrix, orthoMatrix);
+		wvpVpMatrix = Multiply(wvpVpMatrix, viewportMatrix);
+
+		//各ローカル頂点とwvpVpMatrixをTransformする
+		leftTop = Transform(leftTop, wvpVpMatrix);
+		rightTop = Transform(rightTop, wvpVpMatrix);
+		leftBottom = Transform(leftBottom, wvpVpMatrix);
+		rightBottom = Transform(rightBottom, wvpVpMatrix);
+
 
 		// 逆行列
 		//Matrix2x2 inverseM1 = Inverse(m1);
@@ -498,6 +568,14 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			int(leftBottom.x), int(leftBottom.y),
 			int(rightBottom.x), int(rightBottom.y),
 			0, 0, 1, 1, textureHandle, WHITE);
+
+		Novice::DrawLine(0, 600, 1280, 600, RED);
+		Novice::DrawLine(400, 0, 400, 720, GREEN);
+
+		//Novice::ScreenPrintf(0, 500, "x=%f  y=%f", rectCenter.x, rectCenter.y);
+		//Novice::ScreenPrintf(0, 520, "x=%f  y=%f", leftTop.x, leftTop.y);
+
+
 
 		// 矩形(四角形)を描画
 		//Matrix2x2 scaleMatrix = MakeScaleMatrix(scale);
