@@ -183,7 +183,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		Vector2 rightBottom = { rectSize.x / 2, -rectSize.y / 2 }; 	// 右下
 
 		// 角度を増やす
-		theta += 0.1f;
+		theta += 1.0f/60.0f;
 
 		// 回転行列の作成
 		Matrix2x2 rotateMatrix = MakeRotateMatrix(theta);
