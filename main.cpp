@@ -100,16 +100,16 @@ Matrix2x2 MakeRotateMatrix(float theta)
 }
 
 // スケール（拡縮）行列の作成関数
-Matrix2x2 MakeScaleMatrix(Vector2 scale) {
-	Matrix2x2 result;
-
-	result.m[0][0] = scale.x;
-	result.m[0][1] = 0;
-	result.m[1][0] = 0;
-	result.m[1][1] = scale.y;
-
-	return result;
-}
+//Matrix2x2 MakeScaleMatrix(Vector2 scale) {
+//	Matrix2x2 result;
+//
+//	result.m[0][0] = scale.x;
+//	result.m[0][1] = 0;
+//	result.m[1][0] = 0;
+//	result.m[1][1] = scale.y;
+//
+//	return result;
+//}
 
 // スクリーン座標系へ変換する関数 (前期に作成済)
 Vector2 ToScreen(const Vector2* world) {
@@ -218,10 +218,10 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		/// ↓描画処理ここから
 		///
 
-		//MatrixScreenPrintf(0, kRowHeight * 0, resultAdd);
-		//MatrixScreenPrintf(0, kRowHeight * 2 + 10, resultSubtract);
-		//MatrixScreenPrintf(0, kRowHeight * 4 + 20, resultMultiply);
-		//VectorScreenPrintf(0, kRowHeight * 6 + 30, resultVector);
+		MatrixScreenPrintf(0, kRowHeight * 0, resultAdd);
+		MatrixScreenPrintf(0, kRowHeight * 2 + 10, resultSubtract);
+		MatrixScreenPrintf(0, kRowHeight * 4 + 20, resultMultiply);
+		VectorScreenPrintf(0, kRowHeight * 6 + 30, resultVector);
 
 		// 矩形(四角形)を描画
 		Novice::DrawQuad(
@@ -232,9 +232,9 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			0, 0, 1, 1, textureHandle, WHITE);
 
 		// 矩形(四角形)を描画
-		Vector2 scale{ 2.0f, 4.0f };
-		Matrix2x2 scaleMatrix = MakeScaleMatrix(scale);
-		MatrixScreenPrintf(0, 0, scaleMatrix);
+		//Vector2 scale{ 2.0f, 4.0f };
+		//Matrix2x2 scaleMatrix = MakeScaleMatrix(scale);
+		//MatrixScreenPrintf(0, 0, scaleMatrix);
 
 
 		///
