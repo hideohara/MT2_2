@@ -343,6 +343,38 @@ Matrix3x3 MakeViewportMatrix(float left, float top, float width, float height) {
 	return result;
 }
 
+
+// --------------------------------------------------
+
+// 線形補間
+Vector2 Lerp(const Vector2& p0, const Vector2& p1, float t) {
+	Vector2 result;
+
+	//線形補間を行う式を書く
+	//(1-t) * a + t * b
+	//a=p0、b=p1
+	//xにはx同士の計算を、yにはy同士の計算を入れる事
+	result.x = (1 - t) * p0.x + t * p1.x;//
+	result.y = (1 - t) * p0.y + t * p1.y;
+
+	return result;
+}
+
+// 2次ベジェ曲線
+Vector2 Bezier(const Vector2& p0, const Vector2& p1, const Vector2& p2, float t) {
+
+	Vector2 p0p1 = Lerp(p0, p1, t);
+	Vector2 p1p2 = Lerp(p1, p2, t);
+	Vector2 p = Lerp(p0p1, p1p2, t);
+	return p;
+	//資料p10を参考に中身を埋める
+	//最後のpをreturnすること。
+}
+
+
+
+
+
 // --------------------------------------------------
 
 // Windowsアプリでのエントリーポイント(main関数)
@@ -355,52 +387,44 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	char keys[256] = { 0 };
 	char preKeys[256] = { 0 };
 
-	Matrix2x2 m1;
-	m1.m[0][0] = 1.0f;
-	m1.m[0][1] = 2.0f;
-	m1.m[1][0] = 3.0f;
-	m1.m[1][1] = 4.0f;
 
-	//Matrix2x2 m2;
-	//m2.m[0][0] = 5.0f;
-	//m2.m[0][1] = 6.0f;
-	//m2.m[1][0] = 7.0f;
-	//m2.m[1][1] = 8.0f;
-
-	Matrix3x3 m2;
-	m2.m[0][0] = 1.0f; m2.m[0][1] = 2.0f; m2.m[0][2] = 0.0f;
-	m2.m[1][0] = 3.0f; m2.m[1][1] = 4.0f; m2.m[1][2] = 0.0f;
-	m2.m[2][0] = 5.0f; m2.m[2][1] = 6.0f; m2.m[2][2] = 1.0f;
-
-
-	Vector2 v = { 10, 20 };
+	//Vector2 v = { 10, 20 };
 
 	// 中心の座標
-	Vector2 rectCenter = { 0, 0 };
+	//Vector2 rectCenter = { 0, 0 };
 
 	// サイズ
-	Vector2 rectSize = { 80, 80 };
+	//Vector2 rectSize = { 80, 80 };
 
 
 	// 角度の変数
-	float theta = 0.0f;
+	//float theta = 0.0f;
 
 	// テクスチャーの読み込み
-	int textureHandle = Novice::LoadTexture("white1x1.png");
+	// int textureHandle = Novice::LoadTexture("white1x1.png");
 
 	// キー入力で移動する速さ
-	const int kSpeed = 4;
+	//const int kSpeed = 4;
 
 	// スケール
-	Vector2 scale{ 1.0f, 1.0f };
+	//Vector2 scale{ 1.0f, 1.0f };
 
 	// カメラのワールド座標を入れる
-	Vector2 cameraPosition = { 200,200 };
+	// Vector2 cameraPosition = { 200,200 };
+	Vector2 cameraPosition = { 400,200 };
 
 	//const float kMaxScale = 2.0f;
 	//const float kMinScale = 0.5f;
 	//float scale = 1.0f;
 	//float scaleIncrement = 0.04f;
+
+	// 制御点
+	const Vector2 kControlPoints[] = {
+	  {100,100},//p0のワールド座標
+	  {400,400},//p1のワールド座標
+	  {700,100},//p2のワールド座標
+	};
+
 
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
@@ -421,10 +445,10 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		//Vector2 resultVector = Multiply(v, m1);
 
 		// 矩形(四角形)の4頂点の作成
-		Vector2 leftTop = { -rectSize.x / 2, rectSize.y / 2 };     // 左上
-		Vector2 rightTop = { rectSize.x / 2, rectSize.y / 2 };     	// 右上
-		Vector2 leftBottom = { -rectSize.x / 2, -rectSize.y / 2 }; 	// 左下
-		Vector2 rightBottom = { rectSize.x / 2, -rectSize.y / 2 }; 	// 右下
+		//Vector2 leftTop = { -rectSize.x / 2, rectSize.y / 2 };     // 左上
+		//Vector2 rightTop = { rectSize.x / 2, rectSize.y / 2 };     	// 右上
+		//Vector2 leftBottom = { -rectSize.x / 2, -rectSize.y / 2 }; 	// 左下
+		//Vector2 rightBottom = { rectSize.x / 2, -rectSize.y / 2 }; 	// 右下
 
 		// スケール
 		//scale += scaleIncrement;
@@ -433,7 +457,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		//}
 
 		// 角度を増やす
-		theta += 0.05f;
+		//theta += 0.05f;
 
 		// 回転行列の作成
 		//Matrix2x2 rotateMatrix = MakeRotateMatrix(theta);
@@ -454,38 +478,38 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		//rightBottom.x += rectCenter.x;
 		//rightBottom.y += rectCenter.y;
 
-		// 上キーを押したら上に動かす
-		if (keys[DIK_UP] != 0) {
-			rectCenter.y += kSpeed;
-		}
-		// 下キーを押したら下に動かす
-		if (keys[DIK_DOWN] != 0) {
-			rectCenter.y -= kSpeed;
-		}
-		// 左キーを押したら左に動かす
-		if (keys[DIK_LEFT] != 0) {
-			rectCenter.x -= kSpeed;
-		}
-		// 右キーを押したら右に動かす
-		if (keys[DIK_RIGHT] != 0) {
-			rectCenter.x += kSpeed;
-		}
+		//// 上キーを押したら上に動かす
+		//if (keys[DIK_UP] != 0) {
+		//	rectCenter.y += kSpeed;
+		//}
+		//// 下キーを押したら下に動かす
+		//if (keys[DIK_DOWN] != 0) {
+		//	rectCenter.y -= kSpeed;
+		//}
+		//// 左キーを押したら左に動かす
+		//if (keys[DIK_LEFT] != 0) {
+		//	rectCenter.x -= kSpeed;
+		//}
+		//// 右キーを押したら右に動かす
+		//if (keys[DIK_RIGHT] != 0) {
+		//	rectCenter.x += kSpeed;
+		//}
 
-		// スケール
-		if (keys[DIK_Z] != 0) {
-			if (scale.x >= 0.1f)
-			{
-				scale.x -= 0.01f;
-			}
-			if (scale.y >= 0.1f)
-			{
-				scale.y -= 0.01f;
-			}
-		}
-		if (keys[DIK_X] != 0) {
-			scale.x += 0.01f;
-			scale.y += 0.01f;
-		}
+		//// スケール
+		//if (keys[DIK_Z] != 0) {
+		//	if (scale.x >= 0.1f)
+		//	{
+		//		scale.x -= 0.01f;
+		//	}
+		//	if (scale.y >= 0.1f)
+		//	{
+		//		scale.y -= 0.01f;
+		//	}
+		//}
+		//if (keys[DIK_X] != 0) {
+		//	scale.x += 0.01f;
+		//	scale.y += 0.01f;
+		//}
 
 		// 平行移動行列を作成して、4頂点すべてを移動
 		//Matrix3x3 translateMatrix = MakeTranslateMatrix(rectCenter);
@@ -510,7 +534,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 		//1.矩形のworldMatrixを作製
 		//Matrix3x3 worldMatrix = MakeAffineMatrix(scale, theta, rectCenter);
-		Matrix3x3 worldMatrix = MakeTranslateMatrix(rectCenter);
+		//Matrix3x3 worldMatrix = MakeTranslateMatrix(rectCenter);
 
 		//2bカメラのWorldMatrixを作成
 		//作成方法はworldMatrixとほぼ同じだが、positionだけ違うことに注意
@@ -527,15 +551,14 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 
 		//5.ワールドからビューポート行列までの行列全てを合成する
-		Matrix3x3 wvpVpMatrix = Multiply(worldMatrix, viewMatrix);
-		wvpVpMatrix = Multiply(wvpVpMatrix, orthoMatrix);
+		Matrix3x3 wvpVpMatrix = Multiply(viewMatrix, orthoMatrix);
 		wvpVpMatrix = Multiply(wvpVpMatrix, viewportMatrix);
 
 		//各ローカル頂点とwvpVpMatrixをTransformする
-		leftTop = Transform(leftTop, wvpVpMatrix);
-		rightTop = Transform(rightTop, wvpVpMatrix);
-		leftBottom = Transform(leftBottom, wvpVpMatrix);
-		rightBottom = Transform(rightBottom, wvpVpMatrix);
+		//leftTop = Transform(leftTop, wvpVpMatrix);
+		//rightTop = Transform(rightTop, wvpVpMatrix);
+		//leftBottom = Transform(leftBottom, wvpVpMatrix);
+		//rightBottom = Transform(rightBottom, wvpVpMatrix);
 
 
 		// 逆行列
@@ -543,10 +566,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		//Matrix3x3 inverseM2 = Inverse(m2);
 
 		// 転置行列
-		Matrix2x2 transposeM1 = Transpose(m1);
-		Matrix3x3 transposeM2 = Transpose(m2);
-
-
+		//Matrix2x2 transposeM1 = Transpose(m1);
+		//Matrix3x3 transposeM2 = Transpose(m2);
 
 		///
 		/// ↑更新処理ここまで
@@ -561,16 +582,16 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		//MatrixScreenPrintf(0, kRowHeight * 4 + 20, resultMultiply);
 		//VectorScreenPrintf(0, kRowHeight * 6 + 30, resultVector);
 
-		// 矩形(四角形)を描画
-		Novice::DrawQuad(
-			int(leftTop.x), int(leftTop.y),
-			int(rightTop.x), int(rightTop.y),
-			int(leftBottom.x), int(leftBottom.y),
-			int(rightBottom.x), int(rightBottom.y),
-			0, 0, 1, 1, textureHandle, WHITE);
+		//// 矩形(四角形)を描画
+		//Novice::DrawQuad(
+		//	int(leftTop.x), int(leftTop.y),
+		//	int(rightTop.x), int(rightTop.y),
+		//	int(leftBottom.x), int(leftBottom.y),
+		//	int(rightBottom.x), int(rightBottom.y),
+		//	0, 0, 1, 1, textureHandle, WHITE);
 
-		Novice::DrawLine(0, 600, 1280, 600, RED);
-		Novice::DrawLine(400, 0, 400, 720, GREEN);
+		//Novice::DrawLine(0, 600, 1280, 600, RED);
+		//Novice::DrawLine(400, 0, 400, 720, GREEN);
 
 		//Novice::ScreenPrintf(0, 500, "x=%f  y=%f", rectCenter.x, rectCenter.y);
 		//Novice::ScreenPrintf(0, 520, "x=%f  y=%f", leftTop.x, leftTop.y);
@@ -586,8 +607,40 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		//MatrixScreenPrintf(0, kRowHeight * 2 + 10, inverseM2);
 
 		// 転置行列
-		MatrixScreenPrintf(0, kRowHeight * 0, transposeM1);
-		MatrixScreenPrintf(0, kRowHeight * 2 + 10, transposeM2);
+		//MatrixScreenPrintf(0, kRowHeight * 0, transposeM1);
+		//MatrixScreenPrintf(0, kRowHeight * 2 + 10, transposeM2);
+
+
+		// 制御点を描画
+		for (int i = 0; i < 3; i++) {
+
+			// スクリーン座標へ変換
+			Vector2 position = Transform(kControlPoints[i], wvpVpMatrix);
+
+			// 描画
+			Novice::DrawEllipse(
+				int(position.x), int(position.y), 10, 10, 0.0f, WHITE,
+				kFillModeSolid);
+		}
+
+		// ベジェ曲線を描く
+		for (int i = 0; i < 32; i++) {
+			float t = float(i) / 32;
+			float nextT = float(i + 1) / 32;
+
+			// Bezier関数を呼び出し
+			Vector2 bezierPoint = Bezier(kControlPoints[0], kControlPoints[1], kControlPoints[2], t);//ここが分からない
+			Vector2 bezierPointNext = Bezier(kControlPoints[0], kControlPoints[1], kControlPoints[2], nextT);//ここが分からない
+
+			// スクリーン座標へ変換
+			bezierPoint = Transform(bezierPoint, wvpVpMatrix);
+			bezierPointNext = Transform(bezierPointNext, wvpVpMatrix);
+
+			// 描画
+			Novice::DrawLine((int)(bezierPoint.x),		(int)(bezierPoint.y),
+							 (int)(bezierPointNext.x),	(int)(bezierPointNext.y), BLUE);
+		}
+
 
 		///
 		/// ↑描画処理ここまで
