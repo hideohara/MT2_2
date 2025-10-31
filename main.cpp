@@ -279,32 +279,32 @@ Matrix3x3 Inverse(Matrix3x3 matrix)
 // 2x2転置行列を求める
 Matrix2x2 Transpose(Matrix2x2 matrix)
 {
-	Matrix2x2 m1{};
+	Matrix2x2 result{};
 
-	m1.m[0][0] = matrix.m[0][0];
-	m1.m[0][1] = matrix.m[1][0];
-	m1.m[1][0] = matrix.m[0][1];
-	m1.m[1][1] = matrix.m[1][1];
+	result.m[0][0] = matrix.m[0][0];
+	result.m[0][1] = matrix.m[1][0];
+	result.m[1][0] = matrix.m[0][1];
+	result.m[1][1] = matrix.m[1][1];
 
-	return m1;
+	return result;
 }
 
 // 3x3転置行列を求める
 Matrix3x3 Transpose(Matrix3x3 matrix)
 {
-	Matrix3x3 m2{};
+	Matrix3x3 result{};
 
-	m2.m[0][0] = matrix.m[0][0];
-	m2.m[0][1] = matrix.m[1][0];
-	m2.m[0][2] = matrix.m[2][0];
-	m2.m[1][0] = matrix.m[0][1];
-	m2.m[1][2] = matrix.m[2][1];
-	m2.m[1][1] = matrix.m[1][1];
-	m2.m[2][0] = matrix.m[0][2];
-	m2.m[2][1] = matrix.m[1][2];
-	m2.m[2][2] = matrix.m[2][2];
+	result.m[0][0] = matrix.m[0][0];
+	result.m[0][1] = matrix.m[1][0];
+	result.m[0][2] = matrix.m[2][0];
+	result.m[1][0] = matrix.m[0][1];
+	result.m[1][2] = matrix.m[2][1];
+	result.m[1][1] = matrix.m[1][1];
+	result.m[2][0] = matrix.m[0][2];
+	result.m[2][1] = matrix.m[1][2];
+	result.m[2][2] = matrix.m[2][2];
 
-	return m2;
+	return result;
 }
 
 // --------------------------------------------------
