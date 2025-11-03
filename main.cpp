@@ -349,7 +349,7 @@ Matrix3x3 MakeViewportMatrix(float left, float top, float width, float height) {
 int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 	// ライブラリの初期化
-	Novice::Initialize(kWindowTitle, 1280, 720);
+	Novice::Initialize(kWindowTitle, 480, 960);
 
 	// キー入力結果を受け取る箱
 	char keys[256] = { 0 };
@@ -376,7 +376,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	Vector2 v = { 10, 20 };
 
 	// 中心の座標
-	Vector2 rectCenter = { 0, 0 };
+	Vector2 rectCenter = { 0, 200 };
 
 	// サイズ
 	Vector2 rectSize = { 80, 80 };
@@ -395,7 +395,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	Vector2 scale{ 1.0f, 1.0f };
 
 	// カメラのワールド座標を入れる
-	Vector2 cameraPosition = { 200,200 };
+	Vector2 cameraPosition = { 240,480 };
 
 	//const float kMaxScale = 2.0f;
 	//const float kMinScale = 0.5f;
@@ -520,10 +520,10 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		Matrix3x3 viewMatrix = Inverse(cameraMatrix);
 
 		//3.確認課題資料p2の手順3の通りに引数を入れる
-		Matrix3x3 orthoMatrix = MakeOrthographicMatrix(-640, 360, 640, -360);
+		Matrix3x3 orthoMatrix = MakeOrthographicMatrix(-240, 480, 240, -480);
 
 		//4.確認課題資料p2の手順4の通りに引数を入れる
-		Matrix3x3 viewportMatrix = MakeViewportMatrix(0, 0, 1280, 720);
+		Matrix3x3 viewportMatrix = MakeViewportMatrix(0, 0, 480, 960);
 
 
 		//5.ワールドからビューポート行列までの行列全てを合成する
