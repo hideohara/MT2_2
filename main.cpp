@@ -343,6 +343,16 @@ Matrix3x3 MakeViewportMatrix(float left, float top, float width, float height) {
 	return result;
 }
 
+
+struct Ball {
+	Vector2 position;     // ボールの位置。中心
+	Vector2 velocity;     // ボールの速度
+	Vector2 acceleration; // ボールの加速度
+	float mass;           // 質量
+	float radius;         // ボールの半径
+	unsigned int color;   // ボールの色
+};
+
 // --------------------------------------------------
 
 // Windowsアプリでのエントリーポイント(main関数)
@@ -386,7 +396,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	float theta = 0.0f;
 
 	// テクスチャーの読み込み
-	int textureHandle = Novice::LoadTexture("white1x1.png");
+	//int textureHandle = Novice::LoadTexture("white1x1.png");
 
 	// キー入力で移動する速さ
 	const int kSpeed = 4;
@@ -401,6 +411,19 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	//const float kMinScale = 0.5f;
 	//float scale = 1.0f;
 	//float scaleIncrement = 0.04f;
+
+	// 重力加速度を入れる
+	const float kGravitiy = -9.8f;
+
+	//確認課題の資料を参考に{}の中身を埋める。accelerationのyにはkGravitiyを入れる事
+	Ball ball[2];
+	ball[0] = { 160.0f,960.0f, 0.0f,5.0f, 0.0f, kGravitiy, 1.0f, 10.0f, WHITE };//空気抵抗有り
+	ball[1] = { 320.0f,960.0f, 0.0f,5.0f, 0.0f, kGravitiy, 1.0f, 10.0f, RED };//空気抵抗なし
+
+	//bool isShoot = false;
+
+
+
 
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
@@ -510,7 +533,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 		//1.矩形のworldMatrixを作製
 		//Matrix3x3 worldMatrix = MakeAffineMatrix(scale, theta, rectCenter);
-		Matrix3x3 worldMatrix = MakeTranslateMatrix(rectCenter);
+		//Matrix3x3 worldMatrix = MakeTranslateMatrix(rectCenter);
 
 		//2bカメラのWorldMatrixを作成
 		//作成方法はworldMatrixとほぼ同じだが、positionだけ違うことに注意
@@ -525,17 +548,35 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		//4.確認課題資料p2の手順4の通りに引数を入れる
 		Matrix3x3 viewportMatrix = MakeViewportMatrix(0, 0, 480, 960);
 
+		// -----------------------------------------------
+		// 空気抵抗
 
-		//5.ワールドからビューポート行列までの行列全てを合成する
-		Matrix3x3 wvpVpMatrix = Multiply(worldMatrix, viewMatrix);
-		wvpVpMatrix = Multiply(wvpVpMatrix, orthoMatrix);
-		wvpVpMatrix = Multiply(wvpVpMatrix, viewportMatrix);
+		//オブジェクトの数だけworldMatrixとwvpVpMatrixを用意
+		Matrix3x3 worldMatrix[2];
+		Matrix3x3 wvpVpMatrix[2];
 
-		//各ローカル頂点とwvpVpMatrixをTransformする
-		leftTop = Transform(leftTop, wvpVpMatrix);
-		rightTop = Transform(rightTop, wvpVpMatrix);
-		leftBottom = Transform(leftBottom, wvpVpMatrix);
-		rightBottom = Transform(rightBottom, wvpVpMatrix);
+		for (int i = 0; i < 2; i++)
+		{
+			// affine変換
+			worldMatrix[i] = MakeAffineMatrix(Vector2{ 1.0f, 1.0f }, 0.0f, ball[i].position);
+
+			// スクリーンへ変換
+			wvpVpMatrix[i] = Multiply(worldMatrix[i], viewMatrix);
+			wvpVpMatrix[i] = Multiply(wvpVpMatrix[i], orthoMatrix);
+			wvpVpMatrix[i] = Multiply(wvpVpMatrix[i], viewportMatrix);
+
+		}
+
+		////5.ワールドからビューポート行列までの行列全てを合成する
+		//Matrix3x3 wvpVpMatrix = Multiply(worldMatrix, viewMatrix);
+		//wvpVpMatrix = Multiply(wvpVpMatrix, orthoMatrix);
+		//wvpVpMatrix = Multiply(wvpVpMatrix, viewportMatrix);
+
+		////各ローカル頂点とwvpVpMatrixをTransformする
+		//leftTop = Transform(leftTop, wvpVpMatrix);
+		//rightTop = Transform(rightTop, wvpVpMatrix);
+		//leftBottom = Transform(leftBottom, wvpVpMatrix);
+		//rightBottom = Transform(rightBottom, wvpVpMatrix);
 
 
 		// 逆行列
@@ -543,8 +584,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		//Matrix3x3 inverseM2 = Inverse(m2);
 
 		// 転置行列
-		Matrix2x2 transposeM1 = Transpose(m1);
-		Matrix3x3 transposeM2 = Transpose(m2);
+		//Matrix2x2 transposeM1 = Transpose(m1);
+		//Matrix3x3 transposeM2 = Transpose(m2);
 
 
 
@@ -556,21 +597,29 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		/// ↓描画処理ここから
 		///
 
+		for (int i = 0; i < 2; i++)
+		{
+			Novice::DrawEllipse(
+				int(wvpVpMatrix[i].m[2][0]), int(wvpVpMatrix[i].m[2][1]), int(ball[i].radius),
+				int(ball[i].radius), 0.0f, ball[i].color, kFillModeSolid);
+		}
+
+	 
 		//MatrixScreenPrintf(0, kRowHeight * 0, resultAdd);
 		//MatrixScreenPrintf(0, kRowHeight * 2 + 10, resultSubtract);
 		//MatrixScreenPrintf(0, kRowHeight * 4 + 20, resultMultiply);
 		//VectorScreenPrintf(0, kRowHeight * 6 + 30, resultVector);
 
-		// 矩形(四角形)を描画
-		Novice::DrawQuad(
-			int(leftTop.x), int(leftTop.y),
-			int(rightTop.x), int(rightTop.y),
-			int(leftBottom.x), int(leftBottom.y),
-			int(rightBottom.x), int(rightBottom.y),
-			0, 0, 1, 1, textureHandle, WHITE);
+		//// 矩形(四角形)を描画
+		//Novice::DrawQuad(
+		//	int(leftTop.x), int(leftTop.y),
+		//	int(rightTop.x), int(rightTop.y),
+		//	int(leftBottom.x), int(leftBottom.y),
+		//	int(rightBottom.x), int(rightBottom.y),
+		//	0, 0, 1, 1, textureHandle, WHITE);
 
-		Novice::DrawLine(0, 600, 1280, 600, RED);
-		Novice::DrawLine(400, 0, 400, 720, GREEN);
+		//Novice::DrawLine(0, 600, 1280, 600, RED);
+		//Novice::DrawLine(400, 0, 400, 720, GREEN);
 
 		//Novice::ScreenPrintf(0, 500, "x=%f  y=%f", rectCenter.x, rectCenter.y);
 		//Novice::ScreenPrintf(0, 520, "x=%f  y=%f", leftTop.x, leftTop.y);
@@ -586,8 +635,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		//MatrixScreenPrintf(0, kRowHeight * 2 + 10, inverseM2);
 
 		// 転置行列
-		MatrixScreenPrintf(0, kRowHeight * 0, transposeM1);
-		MatrixScreenPrintf(0, kRowHeight * 2 + 10, transposeM2);
+		//MatrixScreenPrintf(0, kRowHeight * 0, transposeM1);
+		//MatrixScreenPrintf(0, kRowHeight * 2 + 10, transposeM2);
 
 		///
 		/// ↑描画処理ここまで
