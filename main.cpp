@@ -365,11 +365,11 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	char keys[256] = { 0 };
 	char preKeys[256] = { 0 };
 
-	Matrix2x2 m1;
-	m1.m[0][0] = 1.0f;
-	m1.m[0][1] = 2.0f;
-	m1.m[1][0] = 3.0f;
-	m1.m[1][1] = 4.0f;
+	//Matrix2x2 m1;
+	//m1.m[0][0] = 1.0f;
+	//m1.m[0][1] = 2.0f;
+	//m1.m[1][0] = 3.0f;
+	//m1.m[1][1] = 4.0f;
 
 	//Matrix2x2 m2;
 	//m2.m[0][0] = 5.0f;
@@ -377,32 +377,32 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	//m2.m[1][0] = 7.0f;
 	//m2.m[1][1] = 8.0f;
 
-	Matrix3x3 m2;
-	m2.m[0][0] = 1.0f; m2.m[0][1] = 2.0f; m2.m[0][2] = 0.0f;
-	m2.m[1][0] = 3.0f; m2.m[1][1] = 4.0f; m2.m[1][2] = 0.0f;
-	m2.m[2][0] = 5.0f; m2.m[2][1] = 6.0f; m2.m[2][2] = 1.0f;
+	//Matrix3x3 m2;
+	//m2.m[0][0] = 1.0f; m2.m[0][1] = 2.0f; m2.m[0][2] = 0.0f;
+	//m2.m[1][0] = 3.0f; m2.m[1][1] = 4.0f; m2.m[1][2] = 0.0f;
+	//m2.m[2][0] = 5.0f; m2.m[2][1] = 6.0f; m2.m[2][2] = 1.0f;
 
 
-	Vector2 v = { 10, 20 };
+	//Vector2 v = { 10, 20 };
 
 	// 中心の座標
-	Vector2 rectCenter = { 0, 200 };
+	//Vector2 rectCenter = { 0, 200 };
 
 	// サイズ
-	Vector2 rectSize = { 80, 80 };
+	//Vector2 rectSize = { 80, 80 };
 
 
 	// 角度の変数
-	float theta = 0.0f;
+	//float theta = 0.0f;
 
 	// テクスチャーの読み込み
 	//int textureHandle = Novice::LoadTexture("white1x1.png");
 
 	// キー入力で移動する速さ
-	const int kSpeed = 4;
+	//const int kSpeed = 4;
 
 	// スケール
-	Vector2 scale{ 1.0f, 1.0f };
+	//Vector2 scale{ 1.0f, 1.0f };
 
 	// カメラのワールド座標を入れる
 	Vector2 cameraPosition = { 240,480 };
@@ -438,16 +438,39 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		/// ↓更新処理ここから
 		///
 
+		// 型を合わせるように教材から修正
+		float k = 1;
+		// 空気抵抗airResistanceは、速度に比例して逆方向に発生する
+		Vector2 airResistance = {
+		k * -ball[0].velocity.x, k * -ball[0].velocity.y};
+		// 加速度とはa=F/mであるから、空気抵抗による加速度は
+		Vector2 airResistanceAcceleration = { 0, airResistance.y / ball[0].mass };
+
+		// まず現時点での加速度を求める
+		Vector2 gravity = { 0,-9.8f };
+		ball[0].acceleration.y = kGravitiy + airResistanceAcceleration.y;
+
+		// 落下移動
+		for (int i = 0; i < 2; i++) {
+			// メインループでボールの速度に加速度を足す
+			ball[i].velocity.x += ball[i].acceleration.x/60.0f;
+			ball[i].velocity.y += ball[i].acceleration.y / 60.0f;
+
+			// ボールの位置に速度を足す
+			ball[i].position.x += ball[i].velocity.x / 60.0f;
+			ball[i].position.y += ball[i].velocity.y / 60.0f;
+		}
+
 		//Matrix2x2 resultAdd = Add(m1, m2);
 		//Matrix2x2 resultSubtract = Subtract(m1, m2);
 		//Matrix2x2 resultMultiply = Multiply(m1, m2);
 		//Vector2 resultVector = Multiply(v, m1);
 
 		// 矩形(四角形)の4頂点の作成
-		Vector2 leftTop = { -rectSize.x / 2, rectSize.y / 2 };     // 左上
-		Vector2 rightTop = { rectSize.x / 2, rectSize.y / 2 };     	// 右上
-		Vector2 leftBottom = { -rectSize.x / 2, -rectSize.y / 2 }; 	// 左下
-		Vector2 rightBottom = { rectSize.x / 2, -rectSize.y / 2 }; 	// 右下
+		//Vector2 leftTop = { -rectSize.x / 2, rectSize.y / 2 };     // 左上
+		//Vector2 rightTop = { rectSize.x / 2, rectSize.y / 2 };     	// 右上
+		//Vector2 leftBottom = { -rectSize.x / 2, -rectSize.y / 2 }; 	// 左下
+		//Vector2 rightBottom = { rectSize.x / 2, -rectSize.y / 2 }; 	// 右下
 
 		// スケール
 		//scale += scaleIncrement;
@@ -456,7 +479,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		//}
 
 		// 角度を増やす
-		theta += 0.05f;
+		//theta += 0.05f;
 
 		// 回転行列の作成
 		//Matrix2x2 rotateMatrix = MakeRotateMatrix(theta);
@@ -478,37 +501,37 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		//rightBottom.y += rectCenter.y;
 
 		// 上キーを押したら上に動かす
-		if (keys[DIK_UP] != 0) {
-			rectCenter.y += kSpeed;
-		}
-		// 下キーを押したら下に動かす
-		if (keys[DIK_DOWN] != 0) {
-			rectCenter.y -= kSpeed;
-		}
-		// 左キーを押したら左に動かす
-		if (keys[DIK_LEFT] != 0) {
-			rectCenter.x -= kSpeed;
-		}
-		// 右キーを押したら右に動かす
-		if (keys[DIK_RIGHT] != 0) {
-			rectCenter.x += kSpeed;
-		}
+		//if (keys[DIK_UP] != 0) {
+		//	rectCenter.y += kSpeed;
+		//}
+		//// 下キーを押したら下に動かす
+		//if (keys[DIK_DOWN] != 0) {
+		//	rectCenter.y -= kSpeed;
+		//}
+		//// 左キーを押したら左に動かす
+		//if (keys[DIK_LEFT] != 0) {
+		//	rectCenter.x -= kSpeed;
+		//}
+		//// 右キーを押したら右に動かす
+		//if (keys[DIK_RIGHT] != 0) {
+		//	rectCenter.x += kSpeed;
+		//}
 
-		// スケール
-		if (keys[DIK_Z] != 0) {
-			if (scale.x >= 0.1f)
-			{
-				scale.x -= 0.01f;
-			}
-			if (scale.y >= 0.1f)
-			{
-				scale.y -= 0.01f;
-			}
-		}
-		if (keys[DIK_X] != 0) {
-			scale.x += 0.01f;
-			scale.y += 0.01f;
-		}
+		//// スケール
+		//if (keys[DIK_Z] != 0) {
+		//	if (scale.x >= 0.1f)
+		//	{
+		//		scale.x -= 0.01f;
+		//	}
+		//	if (scale.y >= 0.1f)
+		//	{
+		//		scale.y -= 0.01f;
+		//	}
+		//}
+		//if (keys[DIK_X] != 0) {
+		//	scale.x += 0.01f;
+		//	scale.y += 0.01f;
+		//}
 
 		// 平行移動行列を作成して、4頂点すべてを移動
 		//Matrix3x3 translateMatrix = MakeTranslateMatrix(rectCenter);
@@ -554,6 +577,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		//オブジェクトの数だけworldMatrixとwvpVpMatrixを用意
 		Matrix3x3 worldMatrix[2];
 		Matrix3x3 wvpVpMatrix[2];
+		Vector2 position[2];
 
 		for (int i = 0; i < 2; i++)
 		{
@@ -564,6 +588,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			wvpVpMatrix[i] = Multiply(worldMatrix[i], viewMatrix);
 			wvpVpMatrix[i] = Multiply(wvpVpMatrix[i], orthoMatrix);
 			wvpVpMatrix[i] = Multiply(wvpVpMatrix[i], viewportMatrix);
+
+			position[i] = Transform({ 0,0 }, wvpVpMatrix[i]);
 
 		}
 
@@ -599,10 +625,14 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 		for (int i = 0; i < 2; i++)
 		{
+			//Novice::DrawEllipse(
+			//	int(wvpVpMatrix[i].m[2][0]), int(wvpVpMatrix[i].m[2][1]), int(ball[i].radius),
+			//	int(ball[i].radius), 0.0f, ball[i].color, kFillModeSolid);
 			Novice::DrawEllipse(
-				int(wvpVpMatrix[i].m[2][0]), int(wvpVpMatrix[i].m[2][1]), int(ball[i].radius),
+				int(position[i].x), int(position[i].y), int(ball[i].radius),
 				int(ball[i].radius), 0.0f, ball[i].color, kFillModeSolid);
 		}
+
 
 	 
 		//MatrixScreenPrintf(0, kRowHeight * 0, resultAdd);
