@@ -347,11 +347,11 @@ Matrix3x3 MakeViewportMatrix(float left, float top, float width, float height) {
 // --------------------------------------------------
 // 新規追加
 
-float Length(const Vector2& v) {
-	//中身を埋める
-	return sqrtf(v.x * v.x + v.y * v.y);
-
-}
+//float Length(const Vector2& v) {
+//	//中身を埋める
+//	return sqrtf(v.x * v.x + v.y * v.y);
+//
+//}
 
 // --------------------------------------------------
 
@@ -460,8 +460,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			// 重力加速度。1は1m
 			const Vector2 kGravity = { 0.0f, -9.8f };
 			// 動摩擦力の大きさを求める
-			//float magnitude = miu * Length(-box.mass * kGravity);
-			float magnitude = miu * Length({ -box.mass * kGravity.x, -box.mass * kGravity.y });
+			// xのみ使用
+			float magnitude = miu * -box.mass * kGravity.y;
 
 			// box.velocity.xを利用して摩擦力の働く向きを求める
 			Vector2 direction = {};
@@ -475,17 +475,16 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			}
 
 			// 動摩擦力を求める
-			Vector2 frictionalForce = { magnitude * direction.x, 0 };
+			//Vector2 frictionalForce = { magnitude * direction.x, 0 };
+			float frictionalForce = magnitude * direction.x;
 			// 動摩擦力によって発生する加速度を求める。ma=Fより、a=F/m
-			box.acceleration = { frictionalForce.x / box.mass,0.0f };
+			//box.acceleration = { frictionalForce.x / box.mass, 0.0f };
+			box.acceleration.x = frictionalForce / box.mass;
 			// 摩擦による加速度が今回の速度の増分より大きければ符号が変わり、逆方向へと進ませてしまう。実際そんなことはありえないので計算して0になるように補正
 			if (fabs(box.acceleration.x / 60.0f) > fabs(box.velocity.x)) {
 				box.acceleration.x = box.velocity.x * 60.0f;
 			}
 			// あとの加速度や速度の扱いはボールと同じ
-
-
-
 
 			box.velocity.x += box.acceleration.x / 60.0f;;
 			box.velocity.x += box.acceleration.x / 60.0f;;
