@@ -376,31 +376,40 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	Vector2 v = { 10, 20 };
 
 	// 中心の座標
-	Vector2 rectCenter = { 0, 0 };
+	//Vector2 rectCenter = { 50, 50 };
 
 	// サイズ
-	Vector2 rectSize = { 80, 80 };
+	//Vector2 rectSize = { 100, 100 };
 
+	struct Box {
+		Vector2 position;   	// 箱の位置。中心
+		Vector2 size;       	// 箱のサイズ
+		Vector2 velocity;   	// 箱の速度
+		Vector2 acceleration;  // 箱の加速度
+		float mass; 		// 箱の質量
+		unsigned int color; 	// 箱の色
+	};
+	
+	Box box{
+		{50,50},
+		{100,100},
+		{},
+		{},
+		1.0f,
+		WHITE
 
-	// 角度の変数
-	float theta = 0.0f;
+	};
+
 
 	// テクスチャーの読み込み
 	int textureHandle = Novice::LoadTexture("white1x1.png");
 
-	// キー入力で移動する速さ
-	const int kSpeed = 4;
 
 	// スケール
 	Vector2 scale{ 1.0f, 1.0f };
 
 	// カメラのワールド座標を入れる
 	Vector2 cameraPosition = { 200,200 };
-
-	//const float kMaxScale = 2.0f;
-	//const float kMinScale = 0.5f;
-	//float scale = 1.0f;
-	//float scaleIncrement = 0.04f;
 
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
@@ -415,102 +424,35 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		/// ↓更新処理ここから
 		///
 
-		//Matrix2x2 resultAdd = Add(m1, m2);
-		//Matrix2x2 resultSubtract = Subtract(m1, m2);
-		//Matrix2x2 resultMultiply = Multiply(m1, m2);
-		//Vector2 resultVector = Multiply(v, m1);
-
 		// 矩形(四角形)の4頂点の作成
-		Vector2 leftTop = { -rectSize.x / 2, rectSize.y / 2 };     // 左上
-		Vector2 rightTop = { rectSize.x / 2, rectSize.y / 2 };     	// 右上
-		Vector2 leftBottom = { -rectSize.x / 2, -rectSize.y / 2 }; 	// 左下
-		Vector2 rightBottom = { rectSize.x / 2, -rectSize.y / 2 }; 	// 右下
+		Vector2 leftTop = { -box.size.x / 2, box.size.y / 2 };     // 左上
+		Vector2 rightTop = { box.size.x / 2, box.size.y / 2 };     	// 右上
+		Vector2 leftBottom = { -box.size.x / 2, -box.size.y / 2 }; 	// 左下
+		Vector2 rightBottom = { box.size.x / 2, -box.size.y / 2 }; 	// 右下
 
-		// スケール
-		//scale += scaleIncrement;
-		//if (scale <= kMinScale || kMaxScale <= scale) {
-		//	scaleIncrement *= -1.0f;
-		//}
 
-		// 角度を増やす
-		theta += 0.05f;
-
-		// 回転行列の作成
-		//Matrix2x2 rotateMatrix = MakeRotateMatrix(theta);
-
-		// 矩形(四角形)の回転
-		//leftTop = Multiply(leftTop, rotateMatrix);
-		//rightTop = Multiply(rightTop, rotateMatrix);
-		//leftBottom = Multiply(leftBottom, rotateMatrix);
-		//rightBottom = Multiply(rightBottom, rotateMatrix);
-
-		//// 矩形(四角形)の平行移動
-		//leftTop.x += rectCenter.x;
-		//leftTop.y += rectCenter.y;
-		//rightTop.x += rectCenter.x;
-		//rightTop.y += rectCenter.y;
-		//leftBottom.x += rectCenter.x;
-		//leftBottom.y += rectCenter.y;
-		//rightBottom.x += rectCenter.x;
-		//rightBottom.y += rectCenter.y;
-
-		// 上キーを押したら上に動かす
-		if (keys[DIK_UP] != 0) {
-			rectCenter.y += kSpeed;
-		}
-		// 下キーを押したら下に動かす
-		if (keys[DIK_DOWN] != 0) {
-			rectCenter.y -= kSpeed;
-		}
-		// 左キーを押したら左に動かす
-		if (keys[DIK_LEFT] != 0) {
-			rectCenter.x -= kSpeed;
-		}
-		// 右キーを押したら右に動かす
-		if (keys[DIK_RIGHT] != 0) {
-			rectCenter.x += kSpeed;
+		// スペースを押したら移動開始
+		if (keys[DIK_SPACE] != 0 && preKeys[DIK_SPACE] == 0) {
+			box.velocity.x = 70.0f;
 		}
 
-		// スケール
-		if (keys[DIK_Z] != 0) {
-			if (scale.x >= 0.1f)
-			{
-				scale.x -= 0.01f;
-			}
-			if (scale.y >= 0.1f)
-			{
-				scale.y -= 0.01f;
-			}
+
+
+		// 動いているかどうか
+		// != 0.0fでも良いが、動いていないとみなす閾値があると良い
+		// 移動量に加速度を加算
+		if (fabs(box.velocity.x) > 0.01f || fabs(box.velocity.y) > 0.01f) {
+			box.velocity.x += box.acceleration.x / 60.0f;;
+			box.velocity.x += box.acceleration.x / 60.0f;;
+
+			// 位置に移動量を加算
+			box.position.x += box.velocity.x / 60.0f;;
+			box.position.y += box.velocity.y / 60.0f;;
 		}
-		if (keys[DIK_X] != 0) {
-			scale.x += 0.01f;
-			scale.y += 0.01f;
-		}
-
-		// 平行移動行列を作成して、4頂点すべてを移動
-		//Matrix3x3 translateMatrix = MakeTranslateMatrix(rectCenter);
-		//leftTop = Transform(leftTop, translateMatrix);
-		//rightTop = Transform(rightTop, translateMatrix);
-		//leftBottom = Transform(leftBottom, translateMatrix);
-		//rightBottom = Transform(rightBottom, translateMatrix);
-
-		//// 4頂点すべてをアフィン変換
-		//Matrix3x3 worldMatrix = MakeAffineMatrix(scale, theta, rectCenter);
-		//leftTop = Transform(leftTop, worldMatrix);
-		//rightTop = Transform(rightTop, worldMatrix);
-		//leftBottom = Transform(leftBottom, worldMatrix);
-		//rightBottom = Transform(rightBottom, worldMatrix);
-
-		//// 矩形(四角形)をスクリーン座標へ変換
-		//leftTop = ToScreen(&leftTop);
-		//rightTop = ToScreen(&rightTop);
-		//leftBottom = ToScreen(&leftBottom);
-		//rightBottom = ToScreen(&rightBottom);
-
 
 		//1.矩形のworldMatrixを作製
 		//Matrix3x3 worldMatrix = MakeAffineMatrix(scale, theta, rectCenter);
-		Matrix3x3 worldMatrix = MakeTranslateMatrix(rectCenter);
+		Matrix3x3 worldMatrix = MakeTranslateMatrix(box.position);
 
 		//2bカメラのWorldMatrixを作成
 		//作成方法はworldMatrixとほぼ同じだが、positionだけ違うことに注意
@@ -538,14 +480,6 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		rightBottom = Transform(rightBottom, wvpVpMatrix);
 
 
-		// 逆行列
-		//Matrix2x2 inverseM1 = Inverse(m1);
-		//Matrix3x3 inverseM2 = Inverse(m2);
-
-		// 転置行列
-		Matrix2x2 transposeM1 = Transpose(m1);
-		Matrix3x3 transposeM2 = Transpose(m2);
-
 
 
 		///
@@ -567,7 +501,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			int(rightTop.x), int(rightTop.y),
 			int(leftBottom.x), int(leftBottom.y),
 			int(rightBottom.x), int(rightBottom.y),
-			0, 0, 1, 1, textureHandle, WHITE);
+			0, 0, 1, 1, textureHandle, box.color);
 
 		Novice::DrawLine(0, 600, 1280, 600, RED);
 		Novice::DrawLine(400, 0, 400, 720, GREEN);
@@ -575,19 +509,6 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		//Novice::ScreenPrintf(0, 500, "x=%f  y=%f", rectCenter.x, rectCenter.y);
 		//Novice::ScreenPrintf(0, 520, "x=%f  y=%f", leftTop.x, leftTop.y);
 
-
-
-		// 矩形(四角形)を描画
-		//Matrix2x2 scaleMatrix = MakeScaleMatrix(scale);
-		//MatrixScreenPrintf(0, 0, scaleMatrix);
-
-		// 逆行列
-		//MatrixScreenPrintf(0, kRowHeight * 0, inverseM1);
-		//MatrixScreenPrintf(0, kRowHeight * 2 + 10, inverseM2);
-
-		// 転置行列
-		MatrixScreenPrintf(0, kRowHeight * 0, transposeM1);
-		MatrixScreenPrintf(0, kRowHeight * 2 + 10, transposeM2);
 
 		///
 		/// ↑描画処理ここまで
