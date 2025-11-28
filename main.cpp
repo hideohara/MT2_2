@@ -1,6 +1,7 @@
 #include <Novice.h>
 #include <Math.h>
 #include <assert.h>
+//#define _USE_MATH_DEFINES
 
 const char kWindowTitle[] = "GC1C_99_オオハラ_ヒデフミ";
 
@@ -344,6 +345,15 @@ Matrix3x3 MakeViewportMatrix(float left, float top, float width, float height) {
 }
 
 // --------------------------------------------------
+// 新規追加
+
+float Length(const Vector2& v) {
+	//中身を埋める
+	return sqrtf(v.x * v.x + v.y * v.y);
+
+}
+
+// --------------------------------------------------
 
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
@@ -401,6 +411,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	};
 
 
+
 	// テクスチャーの読み込み
 	int textureHandle = Novice::LoadTexture("white1x1.png");
 
@@ -442,6 +453,40 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		// != 0.0fでも良いが、動いていないとみなす閾値があると良い
 		// 移動量に加速度を加算
 		if (fabs(box.velocity.x) > 0.01f || fabs(box.velocity.y) > 0.01f) {
+
+			//動摩擦係数を入れる
+			const float miu = 0.4f;
+
+			// 重力加速度。1は1m
+			const Vector2 kGravity = { 0.0f, -9.8f };
+			// 動摩擦力の大きさを求める
+			//float magnitude = miu * Length(-box.mass * kGravity);
+			float magnitude = miu * Length({ -box.mass * kGravity.x, -box.mass * kGravity.y });
+
+			// box.velocity.xを利用して摩擦力の働く向きを求める
+			Vector2 direction = {};
+			if (box.velocity.x > 0)
+			{
+				direction.x = -1.0f;
+			}
+			else
+			{
+				direction.x = 1.0f;
+			}
+
+			// 動摩擦力を求める
+			Vector2 frictionalForce = { magnitude * direction.x, 0 };
+			// 動摩擦力によって発生する加速度を求める。ma=Fより、a=F/m
+			box.acceleration = { frictionalForce.x / box.mass,0.0f };
+			// 摩擦による加速度が今回の速度の増分より大きければ符号が変わり、逆方向へと進ませてしまう。実際そんなことはありえないので計算して0になるように補正
+			if (fabs(box.acceleration.x / 60.0f) > fabs(box.velocity.x)) {
+				box.acceleration.x = box.velocity.x * 60.0f;
+			}
+			// あとの加速度や速度の扱いはボールと同じ
+
+
+
+
 			box.velocity.x += box.acceleration.x / 60.0f;;
 			box.velocity.x += box.acceleration.x / 60.0f;;
 
