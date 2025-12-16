@@ -347,22 +347,33 @@ Matrix3x3 MakeViewportMatrix(float left, float top, float width, float height) {
 // --------------------------------------------------
 
 // 線形補間
-Vector2 Lerp(const Vector2& p0, const Vector2& p1, float t) {
+// Vector2の掛け算の式が無い人は以下の関数を使用する
+Vector2 Lerp(const Vector2& a, const Vector2& b, float t) {
+	//	return t * a + (1.0f - t) * b;　と同じ内容
 	Vector2 result;
-
-	//線形補間を行う式を書く
-	//(1-t) * a + t * b
-	//a=p0、b=p1
-	//xにはx同士の計算を、yにはy同士の計算を入れる事
-	result.x = (1 - t) * p0.x + t * p1.x;//
-	result.y = (1 - t) * p0.y + t * p1.y;
-
+	result.x = t * a.x + (1.0f - t) * b.x;
+	result.y = t * a.y + (1.0f - t) * b.y;
 	return result;
 }
 
+
+//Vector2 Lerp(const Vector2& p0, const Vector2& p1, float t) {
+//	//	return t * a + (1.0f - t) * b;　と同じ内容
+//	Vector2 result;
+//	result.x = (1 - t) * p0.x + t * p1.x;//
+//	result.y = (1 - t) * p0.y + t * p1.y;
+//	return result;
+//}
+
+
+//Vector2 Lerp(const Vector2& a, const Vector2& b, float t) {
+//	return t * a + (1.0f - t) * b;
+//}
+
+
+
 // 2次ベジェ曲線
 Vector2 Bezier(const Vector2& p0, const Vector2& p1, const Vector2& p2, float t) {
-
 	Vector2 p0p1 = Lerp(p0, p1, t);
 	Vector2 p1p2 = Lerp(p1, p2, t);
 	Vector2 p = Lerp(p0p1, p1p2, t);
@@ -611,34 +622,51 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		//MatrixScreenPrintf(0, kRowHeight * 2 + 10, transposeM2);
 
 
-		// 制御点を描画
-		for (int i = 0; i < 3; i++) {
+		//// 制御点を描画
+		//for (int i = 0; i < 3; i++) {
 
-			// スクリーン座標へ変換
-			Vector2 position = Transform(kControlPoints[i], wvpVpMatrix);
+		//	// スクリーン座標へ変換
+		//	Vector2 position = Transform(kControlPoints[i], wvpVpMatrix);
 
-			// 描画
-			Novice::DrawEllipse(
-				int(position.x), int(position.y), 10, 10, 0.0f, WHITE,
-				kFillModeSolid);
-		}
+		//	// 描画
+		//	Novice::DrawEllipse(
+		//		int(position.x), int(position.y), 10, 10, 0.0f, WHITE,
+		//		kFillModeSolid);
+		//}
+
+		// 制御点3つを描く
+		Vector2 position;
+		// p0をスクリーン座標に変換して円を描画
+		position = Transform({ 100,100 }, wvpVpMatrix);
+		Novice::DrawEllipse(int(position.x), int(position.y), 10, 10, 0.0f, WHITE, kFillModeSolid);
+		// p1をスクリーン座標に変換して円を描画
+		position = Transform({ 400,400 }, wvpVpMatrix);
+		Novice::DrawEllipse(int(position.x), int(position.y), 10, 10, 0.0f, WHITE, kFillModeSolid);
+		// p2をスクリーン座標に変換して円を描画
+		position = Transform({ 700,100 }, wvpVpMatrix);
+		Novice::DrawEllipse(int(position.x), int(position.y), 10, 10, 0.0f, WHITE, kFillModeSolid);
+
 
 		// ベジェ曲線を描く
-		for (int i = 0; i < 32; i++) {
-			float t = float(i) / 32;
-			float nextT = float(i + 1) / 32;
+		float index;
+		for (index = 0; index < 32; index++) {
+			float t0 = index / 32;
+			float t1 = (index + 1) / 32;
+		//for (index = 0; index <	4; index++) {
+		//	float t0 = index / 4;
+		//	float t1 = (index + 1) / 4;
 
 			// Bezier関数を呼び出し
-			Vector2 bezierPoint = Bezier(kControlPoints[0], kControlPoints[1], kControlPoints[2], t);//ここが分からない
-			Vector2 bezierPointNext = Bezier(kControlPoints[0], kControlPoints[1], kControlPoints[2], nextT);//ここが分からない
+			Vector2 bezier0 = Bezier({ 100,100 }, { 400,400 }, { 700,100 }, t0);
+			Vector2 bezier1 = Bezier({ 100,100 }, { 400,400 }, { 700,100 }, t1);
 
 			// スクリーン座標へ変換
-			bezierPoint = Transform(bezierPoint, wvpVpMatrix);
-			bezierPointNext = Transform(bezierPointNext, wvpVpMatrix);
+			bezier0 = Transform(bezier0, wvpVpMatrix);
+			bezier1 = Transform(bezier1, wvpVpMatrix);
 
-			// 描画
-			Novice::DrawLine((int)(bezierPoint.x),		(int)(bezierPoint.y),
-							 (int)(bezierPointNext.x),	(int)(bezierPointNext.y), BLUE);
+			// bezier0からbezier1への線を描画
+			Novice::DrawLine((int)(bezier0.x), (int)(bezier0.y),
+							 (int)(bezier1.x), (int)(bezier1.y), BLUE);
 		}
 
 
