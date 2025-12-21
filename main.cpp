@@ -372,9 +372,9 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	const float kGravitiy = -9.8f;
 
 	//確認課題の資料を参考に{}の中身を埋める。accelerationのyにはkGravitiyを入れる事
-	Ball ball[2];
-	ball[0] = { 160.0f,960.0f, 0.0f,5.0f, 0.0f, kGravitiy, 1.0f, 10.0f, WHITE };//空気抵抗有り
-	ball[1] = { 320.0f,960.0f, 0.0f,5.0f, 0.0f, kGravitiy, 1.0f, 10.0f, RED };//空気抵抗なし
+	//Ball ball[2];
+	Ball ball0 = { 160.0f,960.0f, 0.0f,5.0f, 0.0f, kGravitiy, 1.0f, 10.0f, WHITE };//空気抵抗有り
+	Ball ball1 = { 320.0f,960.0f, 0.0f,5.0f, 0.0f, kGravitiy, 1.0f, 10.0f, RED };//空気抵抗なし
 
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
@@ -389,28 +389,39 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		/// ↓更新処理ここから
 		///
 
-		// 型を合わせるように教材から修正
-		float k = 1;
-		// 空気抵抗airResistanceは、速度に比例して逆方向に発生する
-		Vector2 airResistance = {
-		k * -ball[0].velocity.x, k * -ball[0].velocity.y};
-		// 加速度とはa=F/mであるから、空気抵抗による加速度は
-		Vector2 airResistanceAcceleration = { 0, airResistance.y / ball[0].mass };
+		
+		//// 型を合わせるように教材から修正
+		//float k = 1;
+		//// 空気抵抗airResistanceは、速度に比例して逆方向に発生する
+		//Vector2 airResistance = {
+		//k * -ball0.velocity.x, k * -ball0.velocity.y};
+		//// 加速度とはa=F/mであるから、空気抵抗による加速度は
+		//Vector2 airResistanceAcceleration = { 0, airResistance.y / ball0.mass };
 
-		// まず現時点での加速度を求める
-		Vector2 gravity = { 0,-9.8f };
-		ball[0].acceleration.y = kGravitiy + airResistanceAcceleration.y;
+		//// まず現時点での加速度を求める
+		//Vector2 gravity = { 0,-9.8f };
+		//ball0.acceleration.y = kGravitiy + airResistanceAcceleration.y;
+		
 
 		// 落下移動
-		for (int i = 0; i < 2; i++) {
-			// メインループでボールの速度に加速度を足す
-			ball[i].velocity.x += ball[i].acceleration.x/60.0f;
-			ball[i].velocity.y += ball[i].acceleration.y / 60.0f;
+		//for (int i = 0; i < 2; i++) {
+		//	// メインループでボールの速度に加速度を足す
+		//	ball[i].velocity.x += ball[i].acceleration.x/60.0f;
+		//	ball[i].velocity.y += ball[i].acceleration.y / 60.0f;
 
-			// ボールの位置に速度を足す
-			ball[i].position.x += ball[i].velocity.x / 60.0f;
-			ball[i].position.y += ball[i].velocity.y / 60.0f;
-		}
+		//	// ボールの位置に速度を足す
+		//	ball[i].position.x += ball[i].velocity.x / 60.0f;
+		//	ball[i].position.y += ball[i].velocity.y / 60.0f;
+		//}
+
+		// メインループでボールの速度に加速度を足す
+		ball0.velocity.y += ball0.acceleration.y / 60.0f;
+		ball1.velocity.y += ball1.acceleration.y / 60.0f;
+
+		// ボールの位置に速度を足す
+		ball0.position.y += ball0.velocity.y / 60.0f;
+		ball1.position.y += ball1.velocity.y / 60.0f;
+
 
 		//2bカメラのWorldMatrixを作成
 		//作成方法はworldMatrixとほぼ同じだが、positionだけ違うことに注意
@@ -429,23 +440,30 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		// 空気抵抗
 
 		//オブジェクトの数だけworldMatrixとwvpVpMatrixを用意
-		Matrix3x3 worldMatrix[2];
-		Matrix3x3 wvpVpMatrix[2];
-		Vector2 position[2];
+		//Matrix3x3 worldMatrix[2];
+		//Matrix3x3 wvpVpMatrix[2];
+		//Vector2 position[2];
 
-		for (int i = 0; i < 2; i++)
-		{
-			// affine変換
-			worldMatrix[i] = MakeAffineMatrix(Vector2{ 1.0f, 1.0f }, 0.0f, ball[i].position);
+		//for (int i = 0; i < 2; i++)
+		//{
+		//	// affine変換
+		//	worldMatrix[i] = MakeAffineMatrix(Vector2{ 1.0f, 1.0f }, 0.0f, ball[i].position);
 
-			// スクリーンへ変換
-			wvpVpMatrix[i] = Multiply(worldMatrix[i], viewMatrix);
-			wvpVpMatrix[i] = Multiply(wvpVpMatrix[i], orthoMatrix);
-			wvpVpMatrix[i] = Multiply(wvpVpMatrix[i], viewportMatrix);
+		//	// スクリーンへ変換
+		//	wvpVpMatrix[i] = Multiply(worldMatrix[i], viewMatrix);
+		//	wvpVpMatrix[i] = Multiply(wvpVpMatrix[i], orthoMatrix);
+		//	wvpVpMatrix[i] = Multiply(wvpVpMatrix[i], viewportMatrix);
 
-			position[i] = Transform({ 0,0 }, wvpVpMatrix[i]);
+		//	position[i] = Transform({ 0,0 }, wvpVpMatrix[i]);
 
-		}
+		//}
+
+
+		Matrix3x3 wvpVpMatrix = Multiply(viewMatrix, orthoMatrix);
+		wvpVpMatrix = Multiply(wvpVpMatrix, viewportMatrix);
+
+		Vector2 position0 = Transform(ball0.position, wvpVpMatrix);
+		Vector2 position1 = Transform(ball1.position, wvpVpMatrix);
 
 		///
 		/// ↑更新処理ここまで
@@ -455,15 +473,22 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		/// ↓描画処理ここから
 		///
 
-		for (int i = 0; i < 2; i++)
-		{
-			//Novice::DrawEllipse(
-			//	int(wvpVpMatrix[i].m[2][0]), int(wvpVpMatrix[i].m[2][1]), int(ball[i].radius),
-			//	int(ball[i].radius), 0.0f, ball[i].color, kFillModeSolid);
-			Novice::DrawEllipse(
-				int(position[i].x), int(position[i].y), int(ball[i].radius),
-				int(ball[i].radius), 0.0f, ball[i].color, kFillModeSolid);
-		}
+		//for (int i = 0; i < 2; i++)
+		//{
+		//	//Novice::DrawEllipse(
+		//	//	int(wvpVpMatrix[i].m[2][0]), int(wvpVpMatrix[i].m[2][1]), int(ball[i].radius),
+		//	//	int(ball[i].radius), 0.0f, ball[i].color, kFillModeSolid);
+		//	Novice::DrawEllipse(
+		//		int(position[i].x), int(position[i].y), 
+		//		int(ball[i].radius), int(ball[i].radius), 
+		//		0.0f, ball[i].color, kFillModeSolid);
+		//}
+
+		Novice::DrawEllipse( int(position0.x), int(position0.y),	
+			int(ball0.radius), int(ball0.radius), 0.0f, ball0.color, kFillModeSolid);
+		Novice::DrawEllipse(int(position1.x), int(position1.y),
+			int(ball1.radius), int(ball1.radius), 0.0f, ball1.color, kFillModeSolid);
+
 
 		///
 		/// ↑描画処理ここまで
