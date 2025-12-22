@@ -222,7 +222,7 @@ Vector2 Transform(Vector2 vector, Matrix3x3 matrix) {
 Matrix3x3 MakeAffineMatrix(Vector2 scale, float rotate, Vector2 translate)
 {
 	Matrix3x3 result = {};
-	
+
 	Matrix3x3 scaleMatrix = MakeScaleMatrix(scale);
 	Matrix3x3 rotateMatrix = MakeRotateMatrix(rotate);
 	Matrix3x3 translateMatrix = MakeTranslateMatrix(translate);
@@ -344,14 +344,47 @@ Matrix3x3 MakeViewportMatrix(float left, float top, float width, float height) {
 }
 
 
-struct Ball {
-	Vector2 position;     // ボールの位置。中心
-	Vector2 velocity;     // ボールの速度
-	Vector2 acceleration; // ボールの加速度
-	float mass;           // 質量
-	float radius;         // ボールの半径
-	unsigned int color;   // ボールの色
-};
+// --------------------------------------------------
+
+// 線形補間
+// Vector2の掛け算の式が無い人は以下の関数を使用する
+Vector2 Lerp(const Vector2& a, const Vector2& b, float t) {
+	//	return t * a + (1.0f - t) * b;　と同じ内容
+	Vector2 result;
+	result.x = t * a.x + (1.0f - t) * b.x;
+	result.y = t * a.y + (1.0f - t) * b.y;
+	return result;
+}
+
+
+//Vector2 Lerp(const Vector2& p0, const Vector2& p1, float t) {
+//	//	return t * a + (1.0f - t) * b;　と同じ内容
+//	Vector2 result;
+//	result.x = (1 - t) * p0.x + t * p1.x;//
+//	result.y = (1 - t) * p0.y + t * p1.y;
+//	return result;
+//}
+
+
+//Vector2 Lerp(const Vector2& a, const Vector2& b, float t) {
+//	return t * a + (1.0f - t) * b;
+//}
+
+
+
+// 2次ベジェ曲線
+Vector2 Bezier(const Vector2& p0, const Vector2& p1, const Vector2& p2, float t) {
+	Vector2 p0p1 = Lerp(p0, p1, t);
+	Vector2 p1p2 = Lerp(p1, p2, t);
+	Vector2 p = Lerp(p0p1, p1p2, t);
+	return p;
+	//資料p10を参考に中身を埋める
+	//最後のpをreturnすること。
+}
+
+
+
+
 
 // --------------------------------------------------
 
@@ -359,21 +392,50 @@ struct Ball {
 int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 	// ライブラリの初期化
-	Novice::Initialize(kWindowTitle, 480, 960);
+	Novice::Initialize(kWindowTitle, 1280, 720);
 
 	// キー入力結果を受け取る箱
 	char keys[256] = { 0 };
 	char preKeys[256] = { 0 };
 
+
+	//Vector2 v = { 10, 20 };
+
+	// 中心の座標
+	//Vector2 rectCenter = { 0, 0 };
+
+	// サイズ
+	//Vector2 rectSize = { 80, 80 };
+
+
+	// 角度の変数
+	//float theta = 0.0f;
+
+	// テクスチャーの読み込み
+	// int textureHandle = Novice::LoadTexture("white1x1.png");
+
+	// キー入力で移動する速さ
+	//const int kSpeed = 4;
+
+	// スケール
+	//Vector2 scale{ 1.0f, 1.0f };
+
 	// カメラのワールド座標を入れる
-	Vector2 cameraPosition = { 240,480 };
+	// Vector2 cameraPosition = { 200,200 };
+	Vector2 cameraPosition = { 400,200 };
 
-	// 重力加速度を入れる
-	const float kGravitiy = -9.8f;
+	//const float kMaxScale = 2.0f;
+	//const float kMinScale = 0.5f;
+	//float scale = 1.0f;
+	//float scaleIncrement = 0.04f;
 
-	//確認課題の資料を参考に{}の中身を埋める。accelerationのyにはkGravitiyを入れる事
-	Ball ball0 = { 160.0f,960.0f, 0.0f,5.0f, 0.0f, kGravitiy, 1.0f, 10.0f, WHITE };//空気抵抗有り
-	Ball ball1 = { 320.0f,960.0f, 0.0f,5.0f, 0.0f, kGravitiy, 1.0f, 10.0f, RED };//空気抵抗なし
+	// 制御点
+	const Vector2 kControlPoints[] = {
+	  {100,100},//p0のワールド座標
+	  {400,400},//p1のワールド座標
+	  {700,100},//p2のワールド座標
+	};
+
 
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
@@ -388,34 +450,102 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		/// ↓更新処理ここから
 		///
 
-		// -----------------------------------------------
-		// 空気抵抗
-		
-		// 型を合わせるように教材から修正
-		float k = 0.2f;
-		// 空気抵抗airResistanceは、速度に比例して逆方向に発生する
-		Vector2 airResistance = {
-		k * -ball0.velocity.x, k * -ball0.velocity.y};
-		// 加速度とはa=F/mであるから、空気抵抗による加速度は
-		Vector2 airResistanceAcceleration = { 0, airResistance.y / ball0.mass };
+		//Matrix2x2 resultAdd = Add(m1, m2);
+		//Matrix2x2 resultSubtract = Subtract(m1, m2);
+		//Matrix2x2 resultMultiply = Multiply(m1, m2);
+		//Vector2 resultVector = Multiply(v, m1);
 
-		// まず現時点での加速度を求める
-		Vector2 gravity = { 0,-9.8f };
-		ball0.acceleration.y = kGravitiy + airResistanceAcceleration.y;
-		
-		// ----------------------------------------
-		// 移動処理
+		// 矩形(四角形)の4頂点の作成
+		//Vector2 leftTop = { -rectSize.x / 2, rectSize.y / 2 };     // 左上
+		//Vector2 rightTop = { rectSize.x / 2, rectSize.y / 2 };     	// 右上
+		//Vector2 leftBottom = { -rectSize.x / 2, -rectSize.y / 2 }; 	// 左下
+		//Vector2 rightBottom = { rectSize.x / 2, -rectSize.y / 2 }; 	// 右下
 
-		// メインループでボールの速度に加速度を足す
-		ball0.velocity.y += ball0.acceleration.y / 60.0f;
-		ball1.velocity.y += ball1.acceleration.y / 60.0f;
+		// スケール
+		//scale += scaleIncrement;
+		//if (scale <= kMinScale || kMaxScale <= scale) {
+		//	scaleIncrement *= -1.0f;
+		//}
 
-		// ボールの位置に速度を足す
-		ball0.position.y += ball0.velocity.y / 60.0f;
-		ball1.position.y += ball1.velocity.y / 60.0f;
+		// 角度を増やす
+		//theta += 0.05f;
 
-		// ----------------------------------------
-		// 変換用の行列を作成
+		// 回転行列の作成
+		//Matrix2x2 rotateMatrix = MakeRotateMatrix(theta);
+
+		// 矩形(四角形)の回転
+		//leftTop = Multiply(leftTop, rotateMatrix);
+		//rightTop = Multiply(rightTop, rotateMatrix);
+		//leftBottom = Multiply(leftBottom, rotateMatrix);
+		//rightBottom = Multiply(rightBottom, rotateMatrix);
+
+		//// 矩形(四角形)の平行移動
+		//leftTop.x += rectCenter.x;
+		//leftTop.y += rectCenter.y;
+		//rightTop.x += rectCenter.x;
+		//rightTop.y += rectCenter.y;
+		//leftBottom.x += rectCenter.x;
+		//leftBottom.y += rectCenter.y;
+		//rightBottom.x += rectCenter.x;
+		//rightBottom.y += rectCenter.y;
+
+		//// 上キーを押したら上に動かす
+		//if (keys[DIK_UP] != 0) {
+		//	rectCenter.y += kSpeed;
+		//}
+		//// 下キーを押したら下に動かす
+		//if (keys[DIK_DOWN] != 0) {
+		//	rectCenter.y -= kSpeed;
+		//}
+		//// 左キーを押したら左に動かす
+		//if (keys[DIK_LEFT] != 0) {
+		//	rectCenter.x -= kSpeed;
+		//}
+		//// 右キーを押したら右に動かす
+		//if (keys[DIK_RIGHT] != 0) {
+		//	rectCenter.x += kSpeed;
+		//}
+
+		//// スケール
+		//if (keys[DIK_Z] != 0) {
+		//	if (scale.x >= 0.1f)
+		//	{
+		//		scale.x -= 0.01f;
+		//	}
+		//	if (scale.y >= 0.1f)
+		//	{
+		//		scale.y -= 0.01f;
+		//	}
+		//}
+		//if (keys[DIK_X] != 0) {
+		//	scale.x += 0.01f;
+		//	scale.y += 0.01f;
+		//}
+
+		// 平行移動行列を作成して、4頂点すべてを移動
+		//Matrix3x3 translateMatrix = MakeTranslateMatrix(rectCenter);
+		//leftTop = Transform(leftTop, translateMatrix);
+		//rightTop = Transform(rightTop, translateMatrix);
+		//leftBottom = Transform(leftBottom, translateMatrix);
+		//rightBottom = Transform(rightBottom, translateMatrix);
+
+		//// 4頂点すべてをアフィン変換
+		//Matrix3x3 worldMatrix = MakeAffineMatrix(scale, theta, rectCenter);
+		//leftTop = Transform(leftTop, worldMatrix);
+		//rightTop = Transform(rightTop, worldMatrix);
+		//leftBottom = Transform(leftBottom, worldMatrix);
+		//rightBottom = Transform(rightBottom, worldMatrix);
+
+		//// 矩形(四角形)をスクリーン座標へ変換
+		//leftTop = ToScreen(&leftTop);
+		//rightTop = ToScreen(&rightTop);
+		//leftBottom = ToScreen(&leftBottom);
+		//rightBottom = ToScreen(&rightBottom);
+
+
+		//1.矩形のworldMatrixを作製
+		//Matrix3x3 worldMatrix = MakeAffineMatrix(scale, theta, rectCenter);
+		//Matrix3x3 worldMatrix = MakeTranslateMatrix(rectCenter);
 
 		//2bカメラのWorldMatrixを作成
 		//作成方法はworldMatrixとほぼ同じだが、positionだけ違うことに注意
@@ -425,19 +555,30 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		Matrix3x3 viewMatrix = Inverse(cameraMatrix);
 
 		//3.確認課題資料p2の手順3の通りに引数を入れる
-		Matrix3x3 orthoMatrix = MakeOrthographicMatrix(-240, 480, 240, -480);
+		Matrix3x3 orthoMatrix = MakeOrthographicMatrix(-640, 360, 640, -360);
 
 		//4.確認課題資料p2の手順4の通りに引数を入れる
-		Matrix3x3 viewportMatrix = MakeViewportMatrix(0, 0, 480, 960);
+		Matrix3x3 viewportMatrix = MakeViewportMatrix(0, 0, 1280, 720);
 
+
+		//5.ワールドからビューポート行列までの行列全てを合成する
 		Matrix3x3 wvpVpMatrix = Multiply(viewMatrix, orthoMatrix);
 		wvpVpMatrix = Multiply(wvpVpMatrix, viewportMatrix);
 
-		// -----------------------------------------
-		// ２つの球を変換
+		//各ローカル頂点とwvpVpMatrixをTransformする
+		//leftTop = Transform(leftTop, wvpVpMatrix);
+		//rightTop = Transform(rightTop, wvpVpMatrix);
+		//leftBottom = Transform(leftBottom, wvpVpMatrix);
+		//rightBottom = Transform(rightBottom, wvpVpMatrix);
 
-		Vector2 position0 = Transform(ball0.position, wvpVpMatrix);
-		Vector2 position1 = Transform(ball1.position, wvpVpMatrix);
+
+		// 逆行列
+		//Matrix2x2 inverseM1 = Inverse(m1);
+		//Matrix3x3 inverseM2 = Inverse(m2);
+
+		// 転置行列
+		//Matrix2x2 transposeM1 = Transpose(m1);
+		//Matrix3x3 transposeM2 = Transpose(m2);
 
 		///
 		/// ↑更新処理ここまで
@@ -447,11 +588,87 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		/// ↓描画処理ここから
 		///
 
-		// 2つの円を描画
-		Novice::DrawEllipse( int(position0.x), int(position0.y),	
-			int(ball0.radius), int(ball0.radius), 0.0f, ball0.color, kFillModeSolid);
-		Novice::DrawEllipse(int(position1.x), int(position1.y),
-			int(ball1.radius), int(ball1.radius), 0.0f, ball1.color, kFillModeSolid);
+		//MatrixScreenPrintf(0, kRowHeight * 0, resultAdd);
+		//MatrixScreenPrintf(0, kRowHeight * 2 + 10, resultSubtract);
+		//MatrixScreenPrintf(0, kRowHeight * 4 + 20, resultMultiply);
+		//VectorScreenPrintf(0, kRowHeight * 6 + 30, resultVector);
+
+		//// 矩形(四角形)を描画
+		//Novice::DrawQuad(
+		//	int(leftTop.x), int(leftTop.y),
+		//	int(rightTop.x), int(rightTop.y),
+		//	int(leftBottom.x), int(leftBottom.y),
+		//	int(rightBottom.x), int(rightBottom.y),
+		//	0, 0, 1, 1, textureHandle, WHITE);
+
+		//Novice::DrawLine(0, 600, 1280, 600, RED);
+		//Novice::DrawLine(400, 0, 400, 720, GREEN);
+
+		//Novice::ScreenPrintf(0, 500, "x=%f  y=%f", rectCenter.x, rectCenter.y);
+		//Novice::ScreenPrintf(0, 520, "x=%f  y=%f", leftTop.x, leftTop.y);
+
+
+
+		// 矩形(四角形)を描画
+		//Matrix2x2 scaleMatrix = MakeScaleMatrix(scale);
+		//MatrixScreenPrintf(0, 0, scaleMatrix);
+
+		// 逆行列
+		//MatrixScreenPrintf(0, kRowHeight * 0, inverseM1);
+		//MatrixScreenPrintf(0, kRowHeight * 2 + 10, inverseM2);
+
+		// 転置行列
+		//MatrixScreenPrintf(0, kRowHeight * 0, transposeM1);
+		//MatrixScreenPrintf(0, kRowHeight * 2 + 10, transposeM2);
+
+
+		//// 制御点を描画
+		//for (int i = 0; i < 3; i++) {
+
+		//	// スクリーン座標へ変換
+		//	Vector2 position = Transform(kControlPoints[i], wvpVpMatrix);
+
+		//	// 描画
+		//	Novice::DrawEllipse(
+		//		int(position.x), int(position.y), 10, 10, 0.0f, WHITE,
+		//		kFillModeSolid);
+		//}
+
+		// 制御点3つを描く
+		Vector2 position;
+		// p0をスクリーン座標に変換して円を描画
+		position = Transform({ 100,100 }, wvpVpMatrix);
+		Novice::DrawEllipse(int(position.x), int(position.y), 10, 10, 0.0f, WHITE, kFillModeSolid);
+		// p1をスクリーン座標に変換して円を描画
+		position = Transform({ 400,400 }, wvpVpMatrix);
+		Novice::DrawEllipse(int(position.x), int(position.y), 10, 10, 0.0f, WHITE, kFillModeSolid);
+		// p2をスクリーン座標に変換して円を描画
+		position = Transform({ 700,100 }, wvpVpMatrix);
+		Novice::DrawEllipse(int(position.x), int(position.y), 10, 10, 0.0f, WHITE, kFillModeSolid);
+
+
+		// ベジェ曲線を描く
+		float index;
+		for (index = 0; index < 32; index++) {
+			float t0 = index / 32;
+			float t1 = (index + 1) / 32;
+			//for (index = 0; index <	4; index++) {
+			//	float t0 = index / 4;
+			//	float t1 = (index + 1) / 4;
+
+				// Bezier関数を呼び出し
+			Vector2 bezier0 = Bezier({ 100,100 }, { 400,400 }, { 700,100 }, t0);
+			Vector2 bezier1 = Bezier({ 100,100 }, { 400,400 }, { 700,100 }, t1);
+
+			// スクリーン座標へ変換
+			bezier0 = Transform(bezier0, wvpVpMatrix);
+			bezier1 = Transform(bezier1, wvpVpMatrix);
+
+			// bezier0からbezier1への線を描画
+			Novice::DrawLine((int)(bezier0.x), (int)(bezier0.y),
+				(int)(bezier1.x), (int)(bezier1.y), BLUE);
+		}
+
 
 		///
 		/// ↑描画処理ここまで
