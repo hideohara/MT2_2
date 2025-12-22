@@ -400,18 +400,21 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	char preKeys[256] = { 0 };
 
 
-
-	// カメラのワールド座標を入れる
-	Vector2 cameraPosition = { 400,200 };
-
-
-	// 制御点
-	const Vector2 kControlPoints[] = {
-	  {100,100},//p0のワールド座標
-	  {400,400},//p1のワールド座標
-	  {700,100},//p2のワールド座標
+	struct Ball {
+		Vector2 position;      // ボールの位置
+		Vector2 velocity;      // ボールの速度
+		Vector2 acceleration;  // ボールの加速度
+		float mass;            // ボールの質量
+		float radius;          // ボールの半径
+		unsigned int color;    // ボールの色
 	};
 
+	// 重力加速度を入れる
+	const float gravity = -9.8f;
+
+	// 2個のオブジェクト（実体）を作成し、値を設定する
+	Ball ball0 = { 160.0f,960.0f, 0.0f,5.0f, 0.0f, gravity, 1.0f, 10.0f, WHITE };//空気抵抗有り
+	Ball ball1 = { 320.0f,960.0f, 0.0f,5.0f, 0.0f, gravity, 1.0f, 10.0f, RED };    //空気抵抗なし
 
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
@@ -421,6 +424,33 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		// キー入力を受け取る
 		memcpy(preKeys, keys, 256);
 		Novice::GetHitKeyStateAll(keys);
+
+		// 加速度は1秒あたりどの程度速度を変化させるかなので、
+		// 60fps前提であれば、1/60秒分速度を変化させる必要がある
+		ball1.velocity.y += ball1.acceleration.y / 60.0f;
+
+		// 速度は1秒あたりどの程度位置を変化させるかなので、
+		// 60fps前提であれば、1/60秒分位置を変化させる必要がある
+		ball1.position.y += ball1.velocity.y / 60.0f;
+
+
+		// kを定義
+		float k = 0.2f;
+
+		// 空気抵抗airResistanceは、速度に比例して逆方向に発生する
+		Vector2 airResistance = {
+		k * -ball0.velocity.x, k * -ball0.velocity.y };
+		// 加速度とはa=F/mであるから、空気抵抗による加速度は
+		Vector2 airResistanceAcceleration = { airResistance.x / ball0.mass, airResistance.y / ball0.mass };
+
+		// まず現時点での加速度を求める
+		ball0.acceleration.y = gravity + airResistanceAcceleration.y;
+		// 加速度は1秒あたりどの程度速度を変化させるかなので、60fps前提であれば、1/60秒分速度を変化させる必要がある
+		ball0.velocity.y += (ball0.acceleration.y / 60.0f);
+		// 速度は1秒あたりどの程度位置を変化させるかなので、60fps前提であれば、1/60秒分位置を変化させる必要がある
+		ball0.position.y += (ball0.velocity.y / 60.0f);
+
+
 
 		///
 		/// ↓更新処理ここから
@@ -458,41 +488,16 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		/// ↓描画処理ここから
 		///
 
+		// 2つの円の位置を変換
+		Vector2 position0 = Transform(ball0.position, wvpVpMatrix);
+		Vector2 position1 = Transform(ball1.position, wvpVpMatrix);
 
-		// 制御点3つを描く
-		Vector2 position;
-		// p0をスクリーン座標に変換して円を描画
-		position = Transform({ 100,100 }, wvpVpMatrix);
-		Novice::DrawEllipse(int(position.x), int(position.y), 10, 10, 0.0f, WHITE, kFillModeSolid);
-		// p1をスクリーン座標に変換して円を描画
-		position = Transform({ 400,400 }, wvpVpMatrix);
-		Novice::DrawEllipse(int(position.x), int(position.y), 10, 10, 0.0f, WHITE, kFillModeSolid);
-		// p2をスクリーン座標に変換して円を描画
-		position = Transform({ 700,100 }, wvpVpMatrix);
-		Novice::DrawEllipse(int(position.x), int(position.y), 10, 10, 0.0f, WHITE, kFillModeSolid);
+		// 2つの円を描画
+		Novice::DrawEllipse(int(position0.x), int(position0.y), 
+			int(ball0.radius), int(ball0.radius), 0, ball0.color, kFillModeSolid);
+		Novice::DrawEllipse(int(position1.x), int(position1.y), 
+			int(ball1.radius), int(ball1.radius), 0, ball1.color, kFillModeSolid);
 
-
-		// ベジェ曲線を描く
-		float index;
-		for (index = 0; index < 32; index++) {
-			float t0 = index / 32;
-			float t1 = (index + 1) / 32;
-			//for (index = 0; index <	4; index++) {
-			//	float t0 = index / 4;
-			//	float t1 = (index + 1) / 4;
-
-				// Bezier関数を呼び出し
-			Vector2 bezier0 = Bezier({ 100,100 }, { 400,400 }, { 700,100 }, t0);
-			Vector2 bezier1 = Bezier({ 100,100 }, { 400,400 }, { 700,100 }, t1);
-
-			// スクリーン座標へ変換
-			bezier0 = Transform(bezier0, wvpVpMatrix);
-			bezier1 = Transform(bezier1, wvpVpMatrix);
-
-			// bezier0からbezier1への線を描画
-			Novice::DrawLine((int)(bezier0.x), (int)(bezier0.y),
-				(int)(bezier1.x), (int)(bezier1.y), BLUE);
-		}
 
 
 		///
