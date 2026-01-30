@@ -201,23 +201,6 @@ Vector2 Transform(Vector2 vector, Matrix3x3 matrix) {
 
 // ------------------------------------
 
-
-//Matrix3x3 MakeAffineMatrix(Vector2 scale, float rotate, Vector2 translate) {
-//	float cosine = cosf(rotate);
-//	float sine = sinf(rotate);
-//	Matrix3x3 result;
-//	result.m[0][0] = scale.x * cosine;
-//	result.m[0][1] = scale.x * sine;
-//	result.m[0][2] = 0.0f;
-//	result.m[1][0] = -scale.y * sine;
-//	result.m[1][1] = scale.y * cosine;
-//	result.m[1][2] = 0.0f;
-//	result.m[2][0] = translate.x;
-//	result.m[2][1] = translate.y;
-//	result.m[2][2] = 1.0f;
-//	return result;
-//}
-
 // アフィン変換
 Matrix3x3 MakeAffineMatrix(Vector2 scale, float rotate, Vector2 translate)
 {
@@ -356,22 +339,6 @@ Vector2 Lerp(const Vector2& a, const Vector2& b, float t) {
 	return result;
 }
 
-
-//Vector2 Lerp(const Vector2& p0, const Vector2& p1, float t) {
-//	//	return t * a + (1.0f - t) * b;　と同じ内容
-//	Vector2 result;
-//	result.x = (1 - t) * p0.x + t * p1.x;//
-//	result.y = (1 - t) * p0.y + t * p1.y;
-//	return result;
-//}
-
-
-//Vector2 Lerp(const Vector2& a, const Vector2& b, float t) {
-//	return t * a + (1.0f - t) * b;
-//}
-
-
-
 // 2次ベジェ曲線
 Vector2 Bezier(const Vector2& p0, const Vector2& p1, const Vector2& p2, float t) {
 	Vector2 p0p1 = Lerp(p0, p1, t);
@@ -383,9 +350,6 @@ Vector2 Bezier(const Vector2& p0, const Vector2& p1, const Vector2& p2, float t)
 }
 
 
-
-
-
 // --------------------------------------------------
 
 // Windowsアプリでのエントリーポイント(main関数)
@@ -393,7 +357,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 	// ライブラリの初期化
 	// 縦長で初期化
-	Novice::Initialize("Title", 480, 960);
+	Novice::Initialize(kWindowTitle, 480, 960);
 
 	// キー入力結果を受け取る箱
 	char keys[256] = { 0 };
@@ -416,6 +380,9 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	Ball ball0 = { 160.0f,960.0f, 0.0f,5.0f, 0.0f, gravity, 1.0f, 10.0f, WHITE };//空気抵抗有り
 	Ball ball1 = { 320.0f,960.0f, 0.0f,5.0f, 0.0f, gravity, 1.0f, 10.0f, RED };    //空気抵抗なし
 
+	// 移動許可
+	bool move = false;
+
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
 		// フレームの開始
@@ -425,31 +392,39 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		memcpy(preKeys, keys, 256);
 		Novice::GetHitKeyStateAll(keys);
 
-		// 加速度は1秒あたりどの程度速度を変化させるかなので、
-		// 60fps前提であれば、1/60秒分速度を変化させる必要がある
-		ball1.velocity.y += ball1.acceleration.y / 60.0f;
+		// スペースキーが押されたら落下開始
+		if (preKeys[DIK_SPACE] == 0 && keys[DIK_SPACE] != 0) {
+			move = true;
+		}
 
-		// 速度は1秒あたりどの程度位置を変化させるかなので、
-		// 60fps前提であれば、1/60秒分位置を変化させる必要がある
-		ball1.position.y += ball1.velocity.y / 60.0f;
+		// 移動許可
+		if (move == true)
+		{
+			// 加速度は1秒あたりどの程度速度を変化させるかなので、
+			// 60fps前提であれば、1/60秒分速度を変化させる必要がある
+			ball1.velocity.y += ball1.acceleration.y / 60.0f;
+
+			// 速度は1秒あたりどの程度位置を変化させるかなので、
+			// 60fps前提であれば、1/60秒分位置を変化させる必要がある
+			ball1.position.y += ball1.velocity.y / 60.0f;
 
 
-		// kを定義
-		float k = 0.2f;
+			// kを定義
+			float k = 0.2f;
 
-		// 空気抵抗airResistanceは、速度に比例して逆方向に発生する
-		Vector2 airResistance = {
-		k * -ball0.velocity.x, k * -ball0.velocity.y };
-		// 加速度とはa=F/mであるから、空気抵抗による加速度は
-		Vector2 airResistanceAcceleration = { airResistance.x / ball0.mass, airResistance.y / ball0.mass };
+			// 空気抵抗airResistanceは、速度に比例して逆方向に発生する
+			Vector2 airResistance = {
+			k * -ball0.velocity.x, k * -ball0.velocity.y };
+			// 加速度とはa=F/mであるから、空気抵抗による加速度は
+			Vector2 airResistanceAcceleration = { airResistance.x / ball0.mass, airResistance.y / ball0.mass };
 
-		// まず現時点での加速度を求める
-		ball0.acceleration.y = gravity + airResistanceAcceleration.y;
-		// 加速度は1秒あたりどの程度速度を変化させるかなので、60fps前提であれば、1/60秒分速度を変化させる必要がある
-		ball0.velocity.y += (ball0.acceleration.y / 60.0f);
-		// 速度は1秒あたりどの程度位置を変化させるかなので、60fps前提であれば、1/60秒分位置を変化させる必要がある
-		ball0.position.y += (ball0.velocity.y / 60.0f);
-
+			// まず現時点での加速度を求める
+			ball0.acceleration.y = gravity + airResistanceAcceleration.y;
+			// 加速度は1秒あたりどの程度速度を変化させるかなので、60fps前提であれば、1/60秒分速度を変化させる必要がある
+			ball0.velocity.y += (ball0.acceleration.y / 60.0f);
+			// 速度は1秒あたりどの程度位置を変化させるかなので、60fps前提であれば、1/60秒分位置を変化させる必要がある
+			ball0.position.y += (ball0.velocity.y / 60.0f);
+		}
 
 
 		///
